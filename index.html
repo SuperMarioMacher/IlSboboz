@@ -1588,12 +1588,61 @@ html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top),
 #home-screen .logo{ position:relative; z-index:3; }
 #home-screen .fan-card.c1{ z-index:1; } #home-screen .fan-card.c2{ z-index:2; } #home-screen .fan-card.c3{ z-index:3; }
 #home-screen .fan-card.c4{ z-index:4; } #home-screen .fan-card.c5{ z-index:5; }
-.modal-card-row{ max-height:calc(var(--app-height) - 230px); overflow-y:auto; padding:4px 2px; }
 .form-strip i.w .ico{ color:#1a1204; width:1.15em; height:1.15em; }
 .form-strip i.w .ico .ic{ stroke-width:2.4; }
 /* the closed menu waits just outside the screen: its shadow must not darken the right edge of the background */
 #side-menu{ box-shadow:none !important; visibility:hidden; transition:transform .26s cubic-bezier(.3,.8,.3,1), box-shadow .26s, visibility 0s linear .26s; }
 #side-menu.open{ box-shadow:-20px 0 50px rgba(0,0,0,.5) !important; visibility:visible; transition:transform .26s cubic-bezier(.3,.8,.3,1), box-shadow .26s, visibility 0s; }
+
+/* join: scan on top (only where the camera can be used), photo below */
+.join-alt{ flex-direction:column !important; gap:10px; }
+.join-alt .scan-main{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:50px; font-size:1rem; font-weight:600; }
+.join-alt .scan-main .ic{ width:22px; height:22px; flex:0 0 auto; }
+.join-alt #btn-scan{ border-color:rgba(232,192,95,.6); color:var(--gold-bright); }
+
+/* ===== 1.4.0: settings, play aids, autoplay ===== */
+.card.dim, .card.dim.selectable{ opacity:1; filter:grayscale(.9) brightness(.55) contrast(.9); cursor:default; pointer-events:none; box-shadow:none; }
+.card.sb-hint{ box-shadow:0 0 0 2px rgba(232,192,95,.85), 0 0 14px 3px rgba(232,192,95,.55); animation:sbHint 1.6s ease-in-out infinite alternate; }
+@keyframes sbHint{ from{ box-shadow:0 0 0 2px rgba(232,192,95,.7), 0 0 8px 1px rgba(232,192,95,.35); } to{ box-shadow:0 0 0 2px rgba(255,222,130,1), 0 0 18px 5px rgba(232,192,95,.7); } }
+#human-hand{ position:relative; } .human-zones > div{ position:relative; }
+#selall-btn{ position:absolute; z-index:6; transform:translateX(-50%); white-space:nowrap; padding:5px 14px; border-radius:999px; border:0; background:var(--gold-bright); color:#1a1204; font:700 .78rem/1.2 'Synonym','Inter',sans-serif; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.45); }
+#selall-btn::after{ content:''; position:absolute; left:50%; bottom:-4px; margin-left:-5px; border:5px solid transparent; border-top-color:var(--gold-bright); border-bottom:0; }
+#human-area{ position:relative; }
+#auto-bar{ display:none; position:absolute; inset:0; z-index:8; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:rgba(5,19,13,.93); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); border-radius:inherit; text-align:center; padding:8px; font-size:.9rem; }
+#game-screen.auto-on #auto-bar{ display:flex; }
+/* settings section of the menu */
+.sm-set{ margin:6px 0 4px; padding:10px 12px 12px; border-radius:14px; background:rgba(0,0,0,.22); border:1px solid rgba(232,192,95,.16); text-align:left; }
+.sm-set-title{ font:700 .72rem 'Synonym','Inter',sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-bright); opacity:.85; margin-bottom:6px; }
+.ss-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; font-size:.84rem; color:var(--cream); cursor:pointer; }
+.ss-row.main{ margin-top:6px; padding-top:9px; border-top:1px solid rgba(255,255,255,.08); font-weight:700; }
+.ss-row.sub{ font-size:.8rem; }
+.ss-l{ display:inline-flex; align-items:center; gap:7px; min-width:0; }
+.ss-i{ flex:0 0 auto; width:18px; height:18px; border-radius:50%; border:1px solid rgba(232,192,95,.55); background:transparent; color:var(--gold-bright); font:italic 700 .7rem/1 Georgia,serif; padding:0; cursor:pointer; }
+.ss-i.on{ background:var(--gold-bright); color:#1a1204; }
+.ss-note{ display:none; font-size:.72rem; line-height:1.35; color:rgba(243,236,217,.72); padding:2px 2px 6px; }
+.ss-note.open{ display:block; }
+.ss-seg{ display:flex; gap:5px; margin:2px 0 4px; }
+.ss-seg button{ flex:1; padding:8px 2px; border-radius:10px; border:1px solid rgba(232,192,95,.3); background:rgba(8,22,16,.6); color:var(--cream); font:600 .8rem 'Synonym','Inter',sans-serif; cursor:pointer; }
+.ss-seg button.on{ background:var(--gold-bright); color:#1a1204; border-color:var(--gold-bright); }
+.sm-set .switch i{ width:38px; height:22px; } .sm-set .switch i::after{ width:16px; height:16px; } .sm-set .switch input:checked + i::after{ transform:translateX(16px); }
+.sm-set .ss-row b{ color:var(--gold-bright); font-size:.8rem; }
+#st-aids{ margin-left:6px; padding-left:8px; border-left:2px solid rgba(232,192,95,.25); }
+#st-aids.off{ opacity:.4; pointer-events:none; }
+#st-delay{ width:100%; accent-color:var(--gold-bright); margin:2px 0 0; } #st-delay.ro{ opacity:.45; }
+
+/* installed app in full screen: keep the status-bar margin so it looks the same as not in full screen (not during the game) */
+html.pwa.fs:not(.land):not([data-screen="game"]){ --safe-top: var(--pwa-top, 0px); }
+/* the glows of the home end before the edges: top and bottom are the plain colour of the app bars */
+#home-screen{
+  background:
+    radial-gradient(ellipse 75% 26% at 50% 33%, rgba(232,192,95,.15), transparent 100%),
+    radial-gradient(ellipse 75% 26% at 50% 70%, rgba(184,72,47,.13), transparent 100%) !important;
+}
+body{ background:
+    linear-gradient(180deg, #0e271d 0, rgba(14,39,29,0) 170px) top/100% 170px no-repeat,
+    linear-gradient(0deg, #0e271d 0, rgba(14,39,29,0) 170px) bottom/100% 170px no-repeat,
+    radial-gradient(ellipse at 50% 0%, #17382b 0%, #0a1e16 55%, #040d09 100%) !important;
+  background-color:#040d09; }
 
 </style>
 </head>
@@ -1658,10 +1707,11 @@ html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top),
     <button class="btn-primary big" id="btn-join-go">Entra</button>
     <div class="join-or">oppure</div>
     <div class="join-alt">
-      <label class="btn-secondary file-btn">📷 Scatta una foto al QR<input type="file" accept="image/*" capture="environment" id="scan-cam" hidden></label>
-      <label class="btn-secondary file-btn">🖼 Scegli dalla galleria<input type="file" accept="image/*" id="scan-file" hidden></label>
+      <button class="btn-secondary scan-main" id="btn-scan" style="display:none;"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg> Scansiona il QR</button>
+      <button class="btn-secondary scan-main" id="btn-photo"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg> Foto del QR</button>
+      <input type="file" accept="image/*" capture="environment" id="scan-cam" hidden>
+      <input type="file" accept="image/*" id="scan-file" hidden>
     </div>
-    <button class="link-btn" id="btn-scan" style="display:none;">Oppure scansiona dal vivo con la fotocamera</button>
     <div id="join-msg" class="join-msg"></div>
     <p class="join-note">Serve la stessa versione del gioco dell’host: se è diversa o modificata la stanza ti rifiuta.</p>
   </div>
@@ -1756,6 +1806,7 @@ html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top),
         <div class="cards-row" id="human-hand"></div>
       </div>
     </div>
+    <div id="auto-bar"><span>Autoplay attivo: sta giocando un bot al tuo posto</span><button class="btn-primary" id="auto-resume">Riprendi il controllo</button></div>
     <div class="human-footer">
       <div class="action-msg" id="action-msg"></div>
       <div style="display:flex; gap:10px;">
@@ -1800,9 +1851,26 @@ html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top),
 <aside id="side-menu" aria-label="Menu">
   <div class="sm-head"><b>Menu</b></div>
   <button class="sm-item" data-ctx="none" id="sm-stats">📊 <span class="sm-label">Statistiche</span></button>
+  <button class="sm-item" data-ctx="game" id="sm-auto"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9.5 13h.01M14.5 13h.01M9.5 16.5h5"/><circle cx="12" cy="4" r="1"/></svg> <span class="sm-label">Autoplay</span></button>
   <button class="sm-item" data-ctx="game" id="btn-log">📜 <span class="sm-label">Diario e statistiche</span></button>
   <button class="sm-item" data-ctx="game" id="btn-draw" style="display:none;">🤝 <span class="sm-label">Proponi patta</span></button>
   <button class="sm-item" data-ctx="join lobby stats setup game" id="sm-rules">📖 <span class="sm-label">Regole</span></button>
+  <div class="sm-set" id="sm-set">
+    <div class="sm-set-title">Impostazioni</div>
+    <div class="ss-row"><span class="ss-l">Mano in orizzontale<button type="button" class="ss-i" data-i="hand" aria-label="Informazioni">i</button></span></div>
+    <div class="ss-note" data-n="hand"></div>
+    <div class="ss-seg" id="st-hand"><button data-v="right">Destri</button><button data-v="dyn">Dinamica</button><button data-v="left">Mancini</button></div>
+    <label class="ss-row main switch"><span class="ss-l">Aiuti grafici<button type="button" class="ss-i" data-i="aid" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aid"><i></i></label><div class="ss-note" data-n="aid"></div>
+    <div id="st-aids">
+      <label class="ss-row sub switch"><span class="ss-l">Carte non utilizzabili spente<button type="button" class="ss-i" data-i="aidDim" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidDim"><i></i></label><div class="ss-note" data-n="aidDim"></div>
+      <label class="ss-row sub switch"><span class="ss-l">Evidenzia lo sboboz<button type="button" class="ss-i" data-i="aidSb" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidSb"><i></i></label><div class="ss-note" data-n="aidSb"></div>
+      <label class="ss-row sub switch"><span class="ss-l">Tasto «Seleziona tutte»<button type="button" class="ss-i" data-i="aidAll" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidAll"><i></i></label><div class="ss-note" data-n="aidAll"></div>
+      <label class="ss-row sub switch"><span class="ss-l">Evita errori<button type="button" class="ss-i" data-i="aidSafe" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidSafe"><i></i></label><div class="ss-note" data-n="aidSafe"></div>
+    </div>
+    <div class="ss-row"><span class="ss-l">Ritardo dei bot<button type="button" class="ss-i" data-i="delay" aria-label="Informazioni">i</button></span><b id="st-delay-v">nessuno</b></div>
+    <div class="ss-note" data-n="delay"></div>
+    <input type="range" id="st-delay" min="0" max="5" step="0.5" value="0">
+  </div>
   <div class="sm-spacer"></div>
   <div class="sm-info" id="sm-room"></div>
   <div class="sm-info" id="sm-ping"></div>
@@ -1816,8 +1884,8 @@ html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top),
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.3.7',   // mostrata in fondo alla home
-  buildTime: '2026-10-31T20:31',   // data e ora di creazione di questo file (per le novità)
+  version: '1.4.0',   // mostrata in fondo alla home
+  buildTime: '2026-11-01T12:56',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -1977,7 +2045,7 @@ function emit(t, d){
 }
 function toast(text){ emit('toast', {text}); }
 
-function isAI(p){ return p.kind==='bot' || !p.connected; }
+function isAI(p){ return p.kind==='bot' || !p.connected || !!p.auto; }
 
 /* ============================================================
    SETUP PHASE
@@ -1995,6 +2063,7 @@ function finalizeSetup(p, chosenFaceUpCards){
 }
 
 function aiChooseFaceUp(p){
+  if(p.kind==='human') p.aiUsed = true;
   const jolly = p.hand.find(c=>c.rank==='JOLLY');
   const slots = jolly ? 4 : 5;
   const byValueDesc = (a,b)=> rankValue(b.rank)-rankValue(a.rank);
@@ -2451,7 +2520,7 @@ function aiAnswer(player, kind){
 }
 
 function ask(player, kind, data, cb){
-  if(isAI(player)){ cb(aiAnswer(player, kind)); return; }
+  if(isAI(player)){ if(player.kind==='human') player.aiUsed = true; cb(aiAnswer(player, kind)); return; }
   G.pending = {pid:player.id, kind, id:++G.promptSeq, data:data||{}};
   G.pendingCb = cb;
   Host.promptHuman(G.pending);
@@ -2460,6 +2529,7 @@ function ask(player, kind, data, cb){
 function resolvePendingByAI(){
   if(!G.pending) return;
   const p = G.players[G.pending.pid];
+  if(p.kind==='human') p.aiUsed = true;
   const cb = G.pendingCb, kind = G.pending.kind;
   G.pending = null; G.pendingCb = null;
   cb(aiAnswer(p, kind));
@@ -2901,6 +2971,7 @@ function aiPlayFaceUp(p){
    player. Calls afterAll once the engine state is consistent again. */
 function aiStep(afterAll){
   const p = G.players[G.turn];
+  if(p.kind==='human') p.aiUsed = true;     // a bot is playing for a person: this game leaves the statistics
   G.actor = p.id;
   p.st.turns++; G.turnsCount++;
   const zone = currentZone(p);
@@ -2928,6 +2999,7 @@ function humanAction(pid, a){
   if(!G || G.phase!=='play') return {ok:false, msg:'La partita non è in corso.'};
   const p = G.players[pid];
   if(!p) return {ok:false, msg:'Giocatore sconosciuto.'};
+  if(p.auto) return {ok:false, msg:'Autoplay attivo: riprendi il controllo per giocare.'};
   if(G.pending) return {ok:false, msg:'Attendi la scelta in sospeso.'};
   if(G.turn!==pid || p.finished) return {ok:false, msg:'Non è il tuo turno.'};
   const zone = currentZone(p);
@@ -3038,7 +3110,7 @@ function buildResults(){
     rows: rows.map(r=>{
       const p = G.players[r.pid];
       return {pid:r.pid, place:r.place, tie:r.tie, name:p.name, kind:p.kind, avatar:p.avatar,
-              elem:p.elem, color:p.color, st:p.st};
+              elem:p.elem, color:p.color, st:p.st, ai: p.kind==='human' && !!p.aiUsed};
     })
   };
 }
@@ -3051,7 +3123,7 @@ function viewFor(pid){
     const mine = p.id===pid;
     return {
       id:p.id, name:p.name, kind:p.kind, avatar:p.avatar, elem:p.elem, color:p.color,
-      connected:p.connected, finished:p.finished, ready:p.ready,
+      connected:p.connected, finished:p.finished, ready:p.ready, auto:!!p.auto,
       place: G.finishOrder.indexOf(p)+1,
       hand: mine ? p.hand.map(pub) : {length:p.hand.length},
       slots: p.slots.map(s=>({down: s.down ? {uid:s.down.uid, hidden:true} : null, up: s.up ? pub(s.up) : null})),
@@ -3085,6 +3157,19 @@ const MAX_GAMES = 600;
 const MAX_PARTIES = 150;
 const ST_KEYS = ['played','pickups','taken','sboboz','sbobozCards','sbobozKings','kings','jollies','turns','reveals','discards','jdraws','maxHand','queens','counters','badReveals'];
 
+/* personal settings (the bot delay is only the default for rooms this player hosts) */
+function defaultSettings(){
+  return {hand:'dyn', aid:true, aidDim:true, aidSb:false, aidAll:true, aidSafe:false, botDelay:0};
+}
+function cleanSettings(d){
+  const o = defaultSettings();
+  if(!d || typeof d!=='object') return o;
+  if(['dyn','right','left'].includes(d.hand)) o.hand = d.hand;
+  ['aid','aidDim','aidSb','aidAll','aidSafe'].forEach(k=>{ if(typeof d[k]==='boolean') o[k] = d[k]; });
+  if(typeof d.botDelay==='number' && isFinite(d.botDelay)) o.botDelay = Math.max(0, Math.min(5, Math.round(d.botDelay*2)/2));
+  return o;
+}
+
 function defaultProfile(){
   return {
     v:2,
@@ -3092,7 +3177,8 @@ function defaultProfile(){
     name:'', avatar:'🥷',
     games:[],     // every finished game; all the statistics are computed from these
     parties:[],   // every finished party (series of games with crowns)
-    seenVer:''    // last version whose news the player has read
+    seenVer:'',   // last version whose news the player has read
+    settings: defaultSettings()
   };
 }
 
@@ -3114,6 +3200,7 @@ const Store = {
     if(typeof d.name==='string') out.name = d.name.slice(0,24);
     if(typeof d.avatar==='string') out.avatar = d.avatar.slice(0,16);
     if(typeof d.seenVer==='string') out.seenVer = d.seenVer.slice(0,12);
+    out.settings = cleanSettings(d.settings);
     if(Array.isArray(d.parties)) out.parties = d.parties.filter(p=>p && typeof p==='object' && Array.isArray(p.rows)).slice(0,MAX_PARTIES);
     if(Array.isArray(d.games)){
       out.games = d.games.filter(g=>g && typeof g==='object' && Array.isArray(g.rows)).slice(0,MAX_GAMES);
@@ -3127,6 +3214,9 @@ const Store = {
     }
     return out;
   },
+  /* one personal setting, with its default */
+  opt(k){ const st = this.data && this.data.settings; return st && k in st ? st[k] : defaultSettings()[k]; },
+  setOpt(k, v){ if(!this.data.settings) this.data.settings = defaultSettings(); this.data.settings[k] = v; this.data.settings = cleanSettings(this.data.settings); this.save(); },
   save(){
     try{ localStorage.setItem(LS_KEY, JSON.stringify(this.data)); }catch(e){}
   },
@@ -3148,7 +3238,8 @@ const Store = {
       id, ts:res.startedAt||Date.now(), secs:res.secs||0, turns:res.turns||0, n:res.nPlayers,
       decks:res.numDecks||1, online:!!online, stale:!!res.stalemate, draw:!!res.draw,
       room: roomId ? String(roomId) : null, rows,
-      rounds: res.rounds||0, pty: party ? {id:party.id, k:party.k, total:party.total} : null
+      rounds: res.rounds||0, pty: party ? {id:party.id, k:party.k, total:party.total} : null,
+      ai: mine.ai ? 1 : 0     // a bot played (part of) my game: it stays in the history but not in the statistics
     });
     if(this.data.games.length>MAX_GAMES) this.data.games.length = MAX_GAMES;
     this.save();
@@ -3424,7 +3515,7 @@ function tabToken(){
 
 const R = {
   role:'none',          // 'none' | 'host' | 'guest'
-  code:'', members:[], settings:{twoDecks:false, party:false, partyGames:null}, party:null,
+  code:'', members:[], settings:{twoDecks:false, party:false, partyGames:null, botDelay:0}, party:null,
   phase:'lobby',        // 'lobby' | 'game' | 'results'
   net:'off',            // 'off' | 'connecting' | 'ready' | 'error'
   netErr:'', online:false,
@@ -3473,7 +3564,7 @@ const Room = {
   /* ---------- create / destroy ---------- */
   create(online){
     Room.destroy();
-    R.role = 'host'; R.phase = 'lobby'; R.members = []; R.settings = {twoDecks:false, party:false, partyGames:null}; R.party = null;
+    R.role = 'host'; R.phase = 'lobby'; R.members = []; R.settings = {twoDecks:false, party:false, partyGames:null, botDelay:Store.opt('botDelay')}; R.party = null;
     R.code = genCode(); R.online = !!online; R.net = 'off'; R.netErr = '';
     const prof = Store.data;
     const me = newMember('human', prof.name || 'Giocatore', prof.avatar, {isHost:true, token:tabToken()});
@@ -3651,6 +3742,10 @@ const Room = {
         break;
       }
       case 'leave': if(!m.isHost) Room.guestLeft(m); break;
+      case 'auto': {
+        if(R.phase!=='game' || !G || m.kind!=='human' || m.pid<0) return;
+        Host.setAuto(m, !!msg.v); break;
+      }
       case 'act': {
         if(R.phase!=='game' || !G) return;
         const r = humanAction(m.pid, msg.a||{});
@@ -3778,6 +3873,8 @@ const Room = {
     R.members = R.members.filter(x=>x!==m);
     Room.lobbyChanged();
   },
+  /* the only setting the host decides for everybody: how long bots wait before playing (seconds, 0-5) */
+  setBotDelay(v){ v = Math.max(0, Math.min(5, Math.round((+v||0)*2)/2)); Store.setOpt('botDelay', v); if(R.role==='host'){ R.settings.botDelay = v; if(R.phase==='lobby') Room.lobbyChanged(); else broadcastGuests({t:'bd', v}); } },
   setTwoDecks(v){ R.settings.twoDecks = !!v; Room.lobbyChanged(); },
   setParty(v){ R.settings.party = !!v && R.members.length>=PARTY_MIN_PLAYERS; R.party = null; Room.lobbyChanged(); },
   /* +1 / -1 on the number of games; going back to the suggested number makes it "automatic" again */
@@ -3870,6 +3967,9 @@ const Host = {
     Host.drive();
   },
 
+  /* A bot never plays before `botDelay` seconds have passed since its turn began: if the move is ready earlier it waits,
+     if the animations / thinking already took that long it plays at once (a countdown, not an extra pause). */
+  botDelayMs(){ const d = R.settings && typeof R.settings.botDelay==='number' ? R.settings.botDelay : 0; return Math.max(0, Math.min(5, d)) * 1000; },
   drive(){
     if(!G || G.phase!=='play') return;
     clearTimeout(Host.aiTimer);
@@ -3878,12 +3978,13 @@ const Host = {
     if(!isAI(p)) return;
     const seq = G.seq;
     Client.whenIdle(()=>{
+      const wait = Math.max(520, Host.botDelayMs());     // the countdown starts when the animations are over
       Host.aiTimer = setTimeout(()=>{
         if(!G || G.phase!=='play' || G.seq!==seq || G.pending) return;
         const cur = G.players[G.turn];
         if(!isAI(cur)) return;
         aiStep(Host.afterStep);
-      }, 520);
+      }, wait);
     });
   },
 
@@ -3900,6 +4001,21 @@ const Host = {
     try{ Analytics.gameEnd(res, R.online); }catch(e){}
     if(res.party && res.party.last){ try{ Analytics.partyEnd(Party.finalize()); }catch(e){} }
     Client.onResults(res, R.myPid, !!R.online);
+  },
+
+  /* Autoplay: a bot plays for a person who keeps watching. */
+  setAuto(m, on){
+    if(!G || G.phase!=='play') return;
+    const p = G.players[m.pid]; if(!p || p.kind!=='human' || !!p.auto===on) return;
+    p.auto = on;
+    log(on ? `${p.name} ha attivato l’autoplay: gioca un bot al suo posto.` : `${p.name} ha ripreso il controllo.`);
+    if(on){
+      if(G.pending && G.pending.pid===p.id) resolvePendingByAI();
+      Host.afterStep(true);
+    } else {
+      G.seq++; Host.broadcastBatch();
+      Host.drive();      // a bot that was about to play must not be left waiting
+    }
   },
 
   /* one batch of events + a personalised view for every human */
@@ -4104,6 +4220,7 @@ const Guest = {
         R.pings = msg.p || {};
         UI.pingChanged();
         break;
+      case 'bd': if(R.lobby && R.lobby.settings) R.lobby.settings.botDelay = +msg.v||0; break;
       case 'reject': Guest.wantLeave = true; Guest.fail(msg.reason||'Entrata rifiutata.', true); break;
       case 'welcome':
         if(msg.hash!==BUILD_HASH || msg.proto!==PROTOCOL){
@@ -4717,7 +4834,8 @@ function landFlipped(){
 }
 function syncLand(){
   const l = isLandscapePhone(), r = document.documentElement.classList;
-  r.toggle('land', l); r.toggle('flip', l && landFlipped());
+  let mode = 'dyn'; try{ mode = Store.opt('hand'); }catch(e){}
+  r.toggle('land', l); r.toggle('flip', l && (mode==='left' ? true : mode==='right' ? false : landFlipped()));
 }
 function isLandscapePhone(){ return window.innerWidth > window.innerHeight && window.innerHeight <= 520 && window.innerWidth <= 1000; }
 syncLand();
@@ -4757,6 +4875,21 @@ setAppHeight();
 const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 if(IS_IOS) document.documentElement.classList.add('ios');   // only iPhones need room for the notch
 const IS_STANDALONE = (()=>{ try{ return navigator.standalone===true || matchMedia('(display-mode: standalone)').matches; }catch(e){ return false; } })();
+/* installed app: remember how tall the status bar is (measured while it is visible), so that full screen can keep the same margin */
+if(IS_STANDALONE) document.documentElement.classList.add('pwa');
+function pwaBar(){
+  try{
+    if(!IS_STANDALONE || IS_IOS) return;
+    if(!(document.fullscreenElement || document.webkitFullscreenElement) && window.innerHeight>window.innerWidth){
+      const d = Math.round(screen.height - window.innerHeight);
+      if(d>=10 && d<=90) localStorage.setItem('ilsboboz.sbar', String(d));
+    }
+    const v = parseInt(localStorage.getItem('ilsboboz.sbar')||'0', 10);
+    if(v>0) document.documentElement.style.setProperty('--pwa-top', v+'px');
+  }catch(e){}
+}
+pwaBar();
+window.addEventListener('resize', pwaBar);
 const FS_REQ = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
 const fsElement = ()=>document.fullscreenElement || document.webkitFullscreenElement || null;
 // hidden only where it cannot work: browsers without the API, and iOS once installed (already full screen)
@@ -5108,6 +5241,7 @@ const Client = {
       const prevPhase = Client.V ? Client.V.phase : null;
       Client.V = b.view;
       Client.acting = false;
+      if(Client.promptOpen && b.view.pendingPid!==b.view.me){ Client.promptOpen = false; Modal.close(); }   // a bot answered for me (autoplay)
       if(b.view.phase==='play' || b.view.phase==='setup' || b.view.phase==='ended' || b.view.phase==='stalemate'){
         if(b.view.phase==='setup' && prevPhase!=='setup'){ Client.setupSel = []; Client.sel = []; Client.msg = ''; hideResults(); }
         render();
@@ -5125,8 +5259,8 @@ const Client = {
   openPrompt(){
     const msg = Client.prompt;
     if(!msg) return;
-    Client.prompt = null;
-    const answer = (v)=>{ sendToHost({t:'ans', id:msg.id, v}); };
+    Client.prompt = null; Client.promptOpen = true;
+    const answer = (v)=>{ Client.promptOpen = false; sendToHost({t:'ans', id:msg.id, v}); };
     const V = Client.V;
     const me = V.players[V.me];
     if(msg.kind==='c8') Modal.choice('Hai giocato un 8', 'Scegli il vincolo per la prossima carta giocata.',
@@ -5143,7 +5277,7 @@ const Client = {
     const V = Client.V;
     if(!V || V.phase!=='play') return false;
     const me = V.players[V.me];
-    return V.turn===V.me && !me.finished && V.pendingPid<0 && !Client.acting && !Client.busy && Client.queue.length===0;
+    return V.turn===V.me && !me.finished && !me.auto && V.pendingPid<0 && !Client.acting && !Client.busy && Client.queue.length===0;
   },
   act(a){
     Client.acting = true;
@@ -5464,6 +5598,85 @@ function toggleSelection(card, zone){
   render();
 }
 
+
+/* ============================================================
+   PLAY AIDS (personal settings, see the menu)
+============================================================ */
+function aidOn(k){ return !!(Store.opt('aid') && Store.opt(k)); }
+function handCopies(p, rank){ return p.hand.filter(c=>c.rank===rank).length; }
+function handJollies(p){ return p.hand.filter(c=>c.rank==='JOLLY').length; }
+/* can this card be played right now (alone or together with its equals / a jolly)? */
+function cardUsable(V, p, c, zone){
+  if(zone==='faceup') return isLegalRank(V, c.rank==='JOLLY' ? '2' : c.rank, 'faceup', {p, n:1, uid:c.uid});
+  if(c.rank==='JOLLY') return true;
+  const top = handCopies(p, c.rank) + handJollies(p);
+  for(let n=1; n<=top; n++) if(isLegalRank(V, c.rank, 'hand', {p, n})) return true;
+  return false;
+}
+/* how many cards of this rank are useful at most: the ones that make a sboboz, no more */
+function sbobozCap(V, rank){
+  const thr = V.sbobozThreshold;
+  const streak = (V.table.length && V.table[V.table.length-1].rank===rank) ? currentTopStreak(V) : 0;
+  return streak>0 ? Math.max(1, thr - streak) : thr;
+}
+/* would playing cards of this rank from the hand make a sboboz? */
+function canMakeSboboz(V, p, rank){
+  if(rank==='JOLLY') return false;
+  const need = sbobozCap(V, rank);
+  const have = handCopies(p, rank) + handJollies(p);
+  return need<=have && isLegalRank(V, rank, 'hand', {p, n:need});
+}
+/* the "select all" shortcut: the equals of the selected card, up to the sboboz */
+function selectAllInfo(V, p){
+  if(!aidOn('aidAll') || Client.sel.length===0) return null;
+  const sel = p.hand.filter(c=>Client.sel.includes(c.uid));
+  const first = sel.find(c=>c.rank!=='JOLLY');
+  if(!first) return null;
+  const copies = handCopies(p, first.rank);
+  if(copies<3) return null;
+  const target = Math.min(copies, sbobozCap(V, first.rank));
+  const jol = sel.filter(c=>c.rank==='JOLLY').length;
+  const have = sel.filter(c=>c.rank===first.rank).length;
+  if(have + jol >= target || target - jol < 1) return null;
+  return {rank:first.rank, target:target - jol, n:target};
+}
+/* the "select all" pill floats right above the first card the player selected */
+function placeSelectAll(info){
+  const hd = document.getElementById('human-hand'), wrap = hd.parentElement;
+  let b = document.getElementById('selall-btn');
+  if(!info){ if(b) b.style.display = 'none'; return; }
+  if(!b){ b = document.createElement('button'); b.id = 'selall-btn'; b.type = 'button'; b.onclick = applySelectAll; wrap.appendChild(b); }
+  b.textContent = `Seleziona tutte (${info.n})`;
+  b.style.display = '';
+  const first = Array.from(hd.children).find(el=>el.dataset.uid===Client.sel[0]) || hd.querySelector('.card.selected');
+  if(!first){ b.style.display = 'none'; return; }
+  const wr = wrap.getBoundingClientRect(), fr = first.getBoundingClientRect();
+  const half = b.offsetWidth/2;
+  const cx = Math.max(half+2, Math.min(wr.width-half-2, fr.left - wr.left + fr.width/2));
+  b.style.left = cx+'px';
+  b.style.top = (fr.top - wr.top - b.offsetHeight - 3)+'px';
+}
+function applySelectAll(){
+  const V = Client.V, p = myPlayer(), info = selectAllInfo(V, p);
+  if(!info) return;
+  const jollies = p.hand.filter(c=>c.rank==='JOLLY' && Client.sel.includes(c.uid)).map(c=>c.uid);
+  const same = p.hand.slice().sort(handCompare).filter(c=>c.rank===info.rank).slice(0, info.target).map(c=>c.uid);
+  Client.sel = jollies.concat(same);
+  render();
+}
+/* "avoid mistakes": ask before playing fewer / more cards than make sense */
+function playNeedsConfirm(V, p, cards){
+  if(!aidOn('aidSafe')) return null;
+  const others = cards.filter(c=>c.rank!=='JOLLY');
+  if(!others.length) return null;
+  const rank = others[0].rank, n = cards.length;
+  const cap = sbobozCap(V, rank), copies = handCopies(p, rank);
+  const useful = Math.min(copies + cards.filter(c=>c.rank==='JOLLY').length, cap);
+  if(n > cap) return `Ne hai selezionate ${n}, ma per lo sboboz ne bastano ${cap}. Giocarle comunque?`;
+  if(n < Math.min(copies, cap)) { const left = copies - others.length; return `Hai ancora ${left} ${left===1?'carta uguale':'carte uguali'} in mano. Giocare solo ${n} ${n===1?'carta':'carte'}?`; }
+  return null;
+}
+
 function renderHumanStacks(){
   const V = Client.V, p = myPlayer();
   const zone = V.phase==='play' ? currentZone(p) : 'setup';
@@ -5487,9 +5700,12 @@ function renderHumanStacks(){
       const el = wrap.firstElementChild;
       el.classList.add('stack-top');
       if(canActFaceup){
-        el.classList.add('selectable');
-        if(Client.sel.includes(slot.up.uid)) el.classList.add('selected');
-        el.onclick = ()=>toggleSelection(slot.up,'faceup');
+        if(aidOn('aidDim') && !cardUsable(V, p, slot.up, 'faceup')) el.classList.add('dim');
+        else {
+          el.classList.add('selectable');
+          if(Client.sel.includes(slot.up.uid)) el.classList.add('selected');
+          el.onclick = ()=>toggleSelection(slot.up,'faceup');
+        }
       }
       stackEl.appendChild(el);
     } else if(slot.down){
@@ -5521,9 +5737,13 @@ function renderHuman(){
     wrap.innerHTML = cardHtml(c);
     const el = wrap.firstElementChild;
     if(canActHand){
-      el.classList.add('selectable');
-      if(Client.sel.includes(c.uid)) el.classList.add('selected');
-      el.onclick = ()=>toggleSelection(c,'hand');
+      if(aidOn('aidDim') && !cardUsable(V, p, c, 'hand')) el.classList.add('dim');
+      else {
+        el.classList.add('selectable');
+        if(Client.sel.includes(c.uid)) el.classList.add('selected');
+        el.onclick = ()=>toggleSelection(c,'hand');
+        if(aidOn('aidSb') && canMakeSboboz(V, p, c.rank)) el.classList.add('sb-hint');
+      }
     }
     hd.appendChild(el);
   });
@@ -5538,6 +5758,8 @@ function renderHuman(){
   }
   hd.style.overflow = hd.scrollWidth > hd.clientWidth + 1 ? '' : 'visible';   // nothing to clip: don't cut shadows / raised cards
   document.getElementById('hand-label').textContent = `la tua mano (${p.hand.length})`;
+  placeSelectAll(canActHand ? selectAllInfo(V, p) : null);
+  document.getElementById('game-screen').classList.toggle('auto-on', !!p.auto);
 
   const pickupBtn = document.getElementById('btn-pickup');
   const msg = document.getElementById('action-msg');
@@ -5590,10 +5812,10 @@ function renderStatusStrip(){
   const la = document.getElementById('last-action');
   if(V.phase==='play'){
     const p = V.players[V.turn];
-    tb.textContent = p.id===V.me ? 'Tocca a te!' : `Turno di ${p.name}`;
+    tb.textContent = (p.id===V.me && !p.auto) ? 'Tocca a te!' : (p.id===V.me ? 'Gioca il bot per te' : `Turno di ${p.name}`);
   } else tb.textContent = '';
   /* make it obvious when it is my turn: glow, pill, tab title, a short buzz */
-  const mineNow = V.phase==='play' && V.turn===V.me && !myPlayer().finished;
+  const mineNow = V.phase==='play' && V.turn===V.me && !myPlayer().finished && !myPlayer().auto;
   document.getElementById('game-screen').classList.toggle('my-turn', mineNow);
   tb.classList.toggle('mine', mineNow);
   if(mineNow && !Client._wasMine){ try{ if(navigator.vibrate) navigator.vibrate(45); }catch(e){} }
@@ -5682,6 +5904,15 @@ function onTableDropzoneClick(){
     document.getElementById('action-msg').textContent = Client.msg;
     return;
   }
+  const ask = zone==='hand' ? playNeedsConfirm(V, p, cards) : null;
+  if(ask){
+    Modal.choice('Sei sicuro?', ask, [['Gioca','y'],['Annulla','n']], v=>{
+      if(v!=='y') return;
+      if(!Client.canAct()) return;
+      Client.sel = []; Client.act({t:'play', uids});
+    }, true);
+    return;
+  }
   Client.sel = [];
   Client.act({t:'play', uids});
 }
@@ -5747,6 +5978,7 @@ const Modal = {
   discard(hand, onPick){
     const box = Modal.open(`<h3>Hai giocato un 5</h3><p>Scarta una carta dalla mano nell’ipersboboz (esce definitivamente dal gioco).</p><div class="modal-card-row" id="discard-row">${hand.map(c=>cardHtml(c)).join('')}</div>`, 'modal-box-wide');
     const row = document.getElementById('discard-row');
+    { const n = hand.length, w = n<=8 ? 60 : n<=12 ? 52 : n<=18 ? 44 : 38; row.style.setProperty('--card-w', w+'px'); row.style.setProperty('--cw', w+'px'); row.style.setProperty('--card-h', (w*1.41).toFixed(1)+'px'); }
     Array.from(row.children).forEach((el,i)=>{
       el.style.cursor = 'pointer';
       el.onclick = ()=>{
@@ -6518,7 +6750,7 @@ function gameCard(g){
   const when = d.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   const open = SF.open===g.id;
   const win = !me.t && me.pl===1;
-  const tag = (g.draw ? '🤝 patta' : g.stale ? 'stallo' : '') + (g.pty ? ((g.draw||g.stale)?' · ':'') + `🎉 party ${g.pty.k}/${g.pty.total}` : '');
+  const tag = (g.ai ? 'con bot al tuo posto · fuori dalle statistiche' + ((g.draw||g.stale||g.pty)?' · ':'') : '') + (g.draw ? '🤝 patta' : g.stale ? 'stallo' : '') + (g.pty ? ((g.draw||g.stale)?' · ':'') + `🎉 party ${g.pty.k}/${g.pty.total}` : '');
   let h = `<div class="game ${open?'open':''}" data-id="${esc(g.id)}">
     <button class="game-head" data-toggle="${esc(g.id)}">
       <span class="g-when">${when}<small>${g.n} giocatori · ${g.online?'online':'contro bot'}${tag?' · '+tag:''}</small></span>
@@ -6661,9 +6893,10 @@ function statsLobby(games){
 function renderStats(tab){
   if(tab) SF.tab = tab;
   document.querySelectorAll('#stats-tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===SF.tab));
-  const games = sfGames();
+  const all = sfGames();
+  const games = all.filter(g=>!g.ai);       // games a bot played (even in part) stay in the history only
   let html = filtersHtml();
-  html += SF.tab==='me' ? statsMe(games) : SF.tab==='ninja' ? statsNinja(games) : SF.tab==='lobby' ? statsLobby(games) : SF.tab==='party' ? statsParty() : statsHist(games);
+  html += SF.tab==='me' ? statsMe(games) : SF.tab==='ninja' ? statsNinja(games) : SF.tab==='lobby' ? statsLobby(games) : SF.tab==='party' ? statsParty() : statsHist(all);
   const body = $('stats-body');
   const keep = body.parentElement.scrollTop;
   body.innerHTML = html;
@@ -6715,6 +6948,10 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.4.0', major:true, d:'2026-11-01', title:'Aggiunte aiuti di gioco richiesti dai giocatori', items:[
+    'Impostazioni nel menu, sempre a portata di mano: mano per destri, mancini o dinamica e aiuti grafici (carte spente, sboboz evidenziato, seleziona tutte, evita errori)',
+    'Ritardo dei bot deciso dall’host, autoplay e scansione del QR più comoda'
+  ]},
   {v:'1.3.7', d:'2026-10-31', title:'Ping e dettagli', items:[
     'Ping sempre visibile (anche quello dell’host) e su una sola riga, righe della stanza più pulite, schermo intero automatico al primo tocco nell’app installata, margini di home e fine partita come in partita, numero 1 nei cerchi delle vittorie nelle statistiche, logo con le carte a sinistra dietro il titolo e a destra davanti, carte più grandi quando scarti o peschi'
   ]},
@@ -7622,6 +7859,9 @@ function wireUp(){
   $('btn-scan').onclick = ()=>Scanner.open();
   if((location.protocol==='http:' || location.protocol==='https:') && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) $('btn-scan').style.display = '';
   ['scan-file','scan-cam'].forEach(id=>{ $(id).onchange = e=>{ Scanner.fromFile(e.target.files[0]); e.target.value=''; }; });
+  $('btn-photo').onclick = ()=>{
+    Modal.choice('Foto del QR', 'Scatta una foto nuova oppure scegli una già fatta dalla galleria.', [['Scatta una foto','cam'],['Scegli dalla galleria','gal']], v=>{ $(v==='cam' ? 'scan-cam' : 'scan-file').click(); }, true);
+  };
   $('btn-lobby-back').onclick = ()=>{
     if(R.role==='host' && R.members.filter(m=>m.kind==='human').length>1){
       Modal.choice('Chiudere la stanza?', 'Gli altri giocatori verranno disconnessi.', [['Chiudi la stanza','y'],['Resta','n']], v=>{ if(v==='y'){ UI.teardown(); UI.show('home'); } }, true);
@@ -7649,7 +7889,8 @@ function wireUp(){
       $('sm-room').innerHTML = (online && R.code) ? `<span>Codice stanza</span><b class="sm-code">${esc(R.code)}</b><button class="sm-copy" id="sm-copy">Copia</button>` : '';
       $('sm-room').style.display = (online && R.code) ? '' : 'none';
       if($('sm-copy')) $('sm-copy').onclick = ()=>{ copyText(R.code); UI.toastTop('Codice copiato'); };
-      UI.updateRoomMeta();
+      UI.updateRoomMeta(); syncSettings();
+      { const me = Client.V && Client.V.players[Client.V.me]; $('sm-auto').querySelector('.sm-label').textContent = (me && me.auto) ? 'Riprendi il controllo' : 'Autoplay'; }
       $('sm-ver').textContent = 'IlSboboz v' + ((window.SBOBOZ_CONFIG && SBOBOZ_CONFIG.version) || '');
     }
     $('side-menu').classList.toggle('open', o); $('side-overlay').classList.toggle('open', o);
@@ -7659,6 +7900,10 @@ function wireUp(){
   $('side-menu').querySelectorAll('.sm-item').forEach(b=>b.addEventListener('click', ()=>openMenu(false)));
   $('sm-stats').onclick = ()=>$('btn-stats').click();
   $('sm-rules').onclick = showRules;
+  initSettings();
+  const toggleAuto = ()=>{ const me = Client.V && Client.V.players[Client.V.me]; if(!me) return; sendToHost({t:'auto', v:!me.auto}); };
+  $('sm-auto').onclick = toggleAuto;
+  $('auto-resume').onclick = toggleAuto;
   $('sm-leave').onclick = ()=>$('btn-lobby-back').click();
   $('btn-log').onclick = showLog;
   $('btn-draw').onclick = ()=>{
@@ -7674,6 +7919,39 @@ function wireUp(){
     }
   };
   buildReactTray();
+}
+
+
+/* ---------- settings (live in the menu, changeable at any time) ---------- */
+const SET_INFO = {
+  hand:'Destri: in orizzontale la mano è sempre a destra. Mancini: sempre a sinistra. Dinamica: cambia in base a come giri il telefono.',
+  aid:'Attiva o disattiva tutti gli aiuti insieme. Sotto scegli quali tenere.',
+  aidDim:'Le carte che non puoi giocare in questo momento si spengono e non si possono selezionare.',
+  aidSb:'Le carte che completano uno sboboz (le carte uguali che ti servono) brillano.',
+  aidAll:'Da tre carte uguali in su, selezionandone una compare il tasto per prendere subito tutte quelle utili (al massimo quante servono per lo sboboz).',
+  aidSafe:'Chiede conferma se giochi meno carte uguali di quelle che hai o più di quelle che bastano per lo sboboz.',
+  delay:'Un bot non gioca prima di questi secondi dall’inizio del suo turno. Lo decide l’host per tutta la partita.'
+};
+function syncSettings(){
+  const fmt = v=>(v===0 ? 'nessuno' : String(v).replace('.',',')+' s');
+  document.querySelectorAll('#st-hand button').forEach(b=>b.classList.toggle('on', b.dataset.v===Store.opt('hand')));
+  $('st-aid').checked = !!Store.opt('aid');
+  ['aidDim','aidSb','aidAll','aidSafe'].forEach(k=>{ $('st-'+k).checked = !!Store.opt(k); });
+  $('st-aids').classList.toggle('off', !Store.opt('aid'));
+  const hostLike = R.role!=='guest', L = R.lobby;
+  const d = hostLike ? Store.opt('botDelay') : ((L && L.settings && typeof L.settings.botDelay==='number') ? L.settings.botDelay : 0);
+  $('st-delay').value = d; $('st-delay').disabled = !hostLike; $('st-delay-v').textContent = fmt(d);
+  $('st-delay').classList.toggle('ro', !hostLike);
+  document.querySelector('.ss-note[data-n="delay"]').dataset.t = hostLike ? SET_INFO.delay : 'Lo ha deciso l’host per tutta la partita.';
+}
+function initSettings(){
+  document.querySelectorAll('.ss-note').forEach(n=>{ n.textContent = SET_INFO[n.dataset.n] || ''; });
+  document.querySelectorAll('.ss-i').forEach(b=>{ b.onclick = e=>{ e.preventDefault(); e.stopPropagation(); const n = document.querySelector('.ss-note[data-n="'+b.dataset.i+'"]'); if(n){ if(n.dataset.t) n.textContent = n.dataset.t; n.classList.toggle('open'); b.classList.toggle('on', n.classList.contains('open')); } }; });
+  document.querySelectorAll('#st-hand button').forEach(b=>{ b.onclick = ()=>{ Store.setOpt('hand', b.dataset.v); try{ syncLand(); scheduleFitSettled(); }catch(e){} syncSettings(); }; });
+  $('st-aid').onchange = e=>{ Store.setOpt('aid', e.target.checked); syncSettings(); if(Client.V && UI.current==='game') render(); };
+  ['aidDim','aidSb','aidAll','aidSafe'].forEach(k=>{ $('st-'+k).onchange = e=>{ Store.setOpt(k, e.target.checked); if(Client.V && UI.current==='game') render(); }; });
+  $('st-delay').oninput = e=>{ const v = +e.target.value; $('st-delay-v').textContent = v===0 ? 'nessuno' : String(v).replace('.',',')+' s'; Room.setBotDelay(v); };
+  syncSettings();
 }
 
 /* ---------- patta (draw) offers + repetition warning ---------- */
@@ -7732,7 +8010,7 @@ updateFullscreenButtons();
   }catch(e){}
 })();
 
-window.__dbg={cardHtml,flyClone,showResults,resultsVisible,renderResultsActions,Fx,icon,Party,PartyShow,Eng:{aiStep,resolvePendingByAI,initGame,aiChooseFaceUp,skipToEnd,buildResults,aiPlayHand,aiPlayFaceUp,currentZone,resolvePlay,pickUpTable,checkAutoSboboz,applyEffect,log},isLegalRank,hasEffectContextual,hasAnyLegalInHand,humanAction,render,R,Client,UI,Store,Host,Room,Guest,Modal,heldClones,get G(){return G;}};
+window.__dbg={canMakeSboboz,sbobozCap,currentTopStreak,cardHtml,flyClone,showResults,resultsVisible,renderResultsActions,Fx,icon,Party,PartyShow,Eng:{aiStep,resolvePendingByAI,initGame,aiChooseFaceUp,skipToEnd,buildResults,aiPlayHand,aiPlayFaceUp,currentZone,resolvePlay,pickUpTable,checkAutoSboboz,applyEffect,log},isLegalRank,hasEffectContextual,hasAnyLegalInHand,humanAction,render,R,Client,UI,Store,Host,Room,Guest,Modal,heldClones,get G(){return G;}};
 
 })();
 </script>
