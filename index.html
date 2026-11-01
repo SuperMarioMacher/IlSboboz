@@ -1663,9 +1663,21 @@ body{ background:
     radial-gradient(ellipse at 50% 0%, #17382b 0%, #0a1e16 55%, #040d09 100%) !important;
   background-color:#040d09; }
 /* full screen in the installed app: same top and bottom margins as with the bars visible (not in the game) */
-html.pwa.fs:not(.land):not([data-screen="game"]){ --safe-top: calc(var(--pwa-top, 0px) + var(--edge)); }
-html.pwa.fs:not(.land):not([data-screen="game"]) .screen{ padding-bottom:calc(var(--pwa-bot, 0px) + 10px) !important; }
-html.pwa.fs:not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--pwa-bot, 0px) + 5px) !important; }
+@media (pointer:coarse){
+html.fs:not(.land):not([data-screen="game"]){ --safe-top: calc(var(--pwa-top, 0px) + var(--edge)); }
+html.fs:not(.land):not([data-screen="game"]) .screen{ padding-bottom:calc(var(--pwa-bot, 0px) + 10px) !important; }
+html.fs:not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--pwa-bot, 0px) + 5px) !important; }
+}
+
+/* 1.4.3 */
+.ss-i.on{ background:transparent; color:var(--gold-bright); }
+.ss-i.on svg{ background:var(--gold-bright); color:#1a1204; border-radius:50%; }
+#side-menu .sm-head{ padding-bottom:max(var(--safe-top), var(--edge)) !important; box-shadow:0 8px 10px -6px rgba(0,0,0,.45); }
+.card.dim, .card.dim.selectable{ box-shadow:0 0 0 1px rgba(0,0,0,.5), 2px 0 5px rgba(0,0,0,.3) !important; }
+.card.dim::after{ background:rgba(8,20,14,.5); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); }
+#side-menu{ zoom:var(--mz,1); }
+@media (min-width:900px){ #side-menu{ width:calc(400px / var(--mz,1)); } }
+#side-menu .sm-head{ flex:0 0 auto; }
 
 </style>
 </head>
@@ -1909,8 +1921,8 @@ html.pwa.fs:not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.4.2',   // mostrata in fondo alla home
-  buildTime: '2026-11-01T13:26',   // data e ora di creazione di questo file (per le novità)
+  version: '1.4.3',   // mostrata in fondo alla home
+  buildTime: '2026-11-01T13:45',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -4733,11 +4745,14 @@ function fitLayout(){
       // one design for every wide window: all sizes follow the cards, so a smaller
       // window shows exactly the fullscreen layout, just scaled down
       root.style.setProperty('--u', (cw/120).toFixed(3) + 'px');
-      root.style.fontSize = (16 * Math.max(0.75, Math.min(2.4, cw/84))).toFixed(2) + 'px';
+      const fs = 16 * Math.max(0.75, Math.min(2.4, cw/84));
+      root.style.fontSize = fs.toFixed(2) + 'px';
+      root.style.setProperty('--mz', (16/fs).toFixed(4));   // the side menu keeps its normal size
       // the column uses the room the window really has (up to ~15 card widths) so big screens are not left empty at the sides
       root.style.setProperty('--col-w', Math.round(Math.min(window.innerWidth - 40, Math.max(900*cw/120, cw*9.6, cw*15))) + 'px');
     } else {
       root.style.fontSize = '';
+      root.style.removeProperty('--mz');
       root.style.removeProperty('--col-w');
       root.style.removeProperty('--u');
     }
@@ -4904,12 +4919,12 @@ const IS_STANDALONE = (()=>{ try{ return navigator.standalone===true || matchMed
 if(IS_STANDALONE) document.documentElement.classList.add('pwa');
 function pwaBar(){
   try{
-    if(!IS_STANDALONE || IS_IOS) return;
-    if(!(document.fullscreenElement || document.webkitFullscreenElement) && window.innerHeight>window.innerWidth){
+    if(IS_IOS) return;
+    if(IS_STANDALONE && !(document.fullscreenElement || document.webkitFullscreenElement) && window.innerHeight>window.innerWidth){
       const d = Math.round(screen.height - window.innerHeight);
       if(d>=10 && d<=90) localStorage.setItem('ilsboboz.sbar', String(d));
     }
-    const v = parseInt(localStorage.getItem('ilsboboz.sbar')||'0', 10);
+    const v = parseInt(localStorage.getItem('ilsboboz.sbar')||'0', 10) || 34;   // browser tab: typical bars height until measured
     if(v>0){
       const top = Math.round(v*0.74);       // status bar; the rest of the bars is the bottom navigation area
       document.documentElement.style.setProperty('--pwa-top', top+'px');
@@ -6979,6 +6994,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.4.3', d:'2026-11-01'},
   {v:'1.4.2', d:'2026-11-01'},
   {v:'1.4.1', d:'2026-11-01'},
   {v:'1.4.0', major:true, d:'2026-11-01', title:'Aggiunta aiuti di gioco richiesti dai giocatori', items:[
