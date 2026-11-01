@@ -1613,18 +1613,23 @@ html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top),
 /* settings section of the menu */
 .sm-set{ margin:6px 0 4px; padding:10px 12px 12px; border-radius:14px; background:rgba(0,0,0,.22); border:1px solid rgba(232,192,95,.16); text-align:left; }
 .sm-set-title{ font:700 .72rem 'Synonym','Inter',sans-serif; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-bright); opacity:.85; margin-bottom:6px; }
-.ss-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; font-size:.84rem; color:var(--cream); cursor:pointer; }
-.ss-row.main{ margin-top:6px; padding-top:9px; border-top:1px solid rgba(255,255,255,.08); font-weight:700; }
+.ss-row{ display:flex; align-items:center; gap:8px; min-height:38px; font-size:.84rem; color:var(--cream); }
+.ss-row .ss-t{ flex:1 1 auto; min-width:0; }
+.ss-row.main{ margin-top:6px; padding-top:4px; border-top:1px solid rgba(255,255,255,.08); font-weight:700; }
 .ss-row.sub{ font-size:.8rem; }
-.ss-l{ display:inline-flex; align-items:center; gap:7px; min-width:0; }
-.ss-i{ flex:0 0 auto; width:18px; height:18px; border-radius:50%; border:1px solid rgba(232,192,95,.55); background:transparent; color:var(--gold-bright); font:italic 700 .7rem/1 Georgia,serif; padding:0; cursor:pointer; }
-.ss-i.on{ background:var(--gold-bright); color:#1a1204; }
-.ss-note{ display:none; font-size:.72rem; line-height:1.35; color:rgba(243,236,217,.72); padding:2px 2px 6px; }
+.ss-i{ flex:0 0 auto; width:30px; height:30px; margin:0 -2px; padding:0; border:0; background:transparent; color:rgba(232,192,95,.8); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; border-radius:50%; }
+.ss-i svg{ width:19px; height:19px; }
+.ss-i.on{ color:#1a1204; background:var(--gold-bright); }
+.ss-note{ display:none; font-size:.72rem; line-height:1.35; color:rgba(243,236,217,.75); padding:0 2px 8px; }
 .ss-note.open{ display:block; }
-.ss-seg{ display:flex; gap:5px; margin:2px 0 4px; }
-.ss-seg button{ flex:1; padding:8px 2px; border-radius:10px; border:1px solid rgba(232,192,95,.3); background:rgba(8,22,16,.6); color:var(--cream); font:600 .8rem 'Synonym','Inter',sans-serif; cursor:pointer; }
+.ss-seg{ display:flex; gap:5px; margin:2px 0 6px; }
+.ss-seg button{ flex:1; padding:9px 2px; border-radius:10px; border:1px solid rgba(232,192,95,.3); background:rgba(8,22,16,.6); color:var(--cream); font:600 .8rem 'Synonym','Inter',sans-serif; cursor:pointer; }
 .ss-seg button.on{ background:var(--gold-bright); color:#1a1204; border-color:var(--gold-bright); }
-.sm-set .switch i{ width:38px; height:22px; } .sm-set .switch i::after{ width:16px; height:16px; } .sm-set .switch input:checked + i::after{ transform:translateX(16px); }
+.sw{ flex:0 0 auto; position:relative; display:inline-block; cursor:pointer; padding:4px 0 4px 6px; }
+.sw input{ position:absolute; opacity:0; width:100%; height:100%; left:0; top:0; margin:0; cursor:pointer; }
+.sw i{ display:block; width:38px; height:22px; border-radius:20px; background:rgba(255,255,255,.18); position:relative; transition:background .2s; pointer-events:none; }
+.sw i::after{ content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
+.sw input:checked + i{ background:#4caf50; } .sw input:checked + i::after{ transform:translateX(16px); }
 .sm-set .ss-row b{ color:var(--gold-bright); font-size:.8rem; }
 #st-aids{ margin-left:6px; padding-left:8px; border-left:2px solid rgba(232,192,95,.25); }
 #st-aids.off{ opacity:.4; pointer-events:none; }
@@ -1643,6 +1648,24 @@ body{ background:
     linear-gradient(0deg, #0e271d 0, rgba(14,39,29,0) 170px) bottom/100% 170px no-repeat,
     radial-gradient(ellipse at 50% 0%, #17382b 0%, #0a1e16 55%, #040d09 100%) !important;
   background-color:#040d09; }
+
+/* menu title stays on top while the menu scrolls */
+#side-menu{ padding-top:0 !important; }
+#side-menu .sm-head{ position:sticky; top:0; z-index:5; margin:0 -14px 6px !important; padding:max(var(--safe-top), var(--edge)) calc(var(--fab-h) * 2.45 + 36px) 6px 14px !important; min-height:0 !important; box-sizing:content-box; background:#11463a; align-items:flex-start; }
+#side-menu .sm-head b{ line-height:var(--fab-h); }
+/* switched-off cards: still a card (rim and edge), but opaque */
+.card.dim, .card.dim.selectable{ filter:none !important; opacity:1 !important; position:relative; box-shadow:0 0 0 1px rgba(243,236,217,.3), 2px 0 5px rgba(0,0,0,.35) !important; }
+.card.dim::after{ content:''; position:absolute; inset:0; border-radius:inherit; background:rgba(8,20,14,.62); box-shadow:inset 0 0 0 1.5px rgba(243,236,217,.38); pointer-events:none; }
+/* installed app: the bottom bar is the dark colour of the manifest, so the page fades into that */
+body{ background:
+    linear-gradient(180deg, #0e271d 0, rgba(14,39,29,0) 170px) top/100% 170px no-repeat,
+    linear-gradient(0deg, #05130d 0, rgba(5,19,13,0) 170px) bottom/100% 170px no-repeat,
+    radial-gradient(ellipse at 50% 0%, #17382b 0%, #0a1e16 55%, #040d09 100%) !important;
+  background-color:#040d09; }
+/* full screen in the installed app: same top and bottom margins as with the bars visible (not in the game) */
+html.pwa.fs:not(.land):not([data-screen="game"]){ --safe-top: calc(var(--pwa-top, 0px) + var(--edge)); }
+html.pwa.fs:not(.land):not([data-screen="game"]) .screen{ padding-bottom:calc(var(--pwa-bot, 0px) + 10px) !important; }
+html.pwa.fs:not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--pwa-bot, 0px) + 5px) !important; }
 
 </style>
 </head>
@@ -1851,26 +1874,28 @@ body{ background:
 <aside id="side-menu" aria-label="Menu">
   <div class="sm-head"><b>Menu</b></div>
   <button class="sm-item" data-ctx="none" id="sm-stats">📊 <span class="sm-label">Statistiche</span></button>
-  <button class="sm-item" data-ctx="game" id="sm-auto"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9.5 13h.01M14.5 13h.01M9.5 16.5h5"/><circle cx="12" cy="4" r="1"/></svg> <span class="sm-label">Autoplay</span></button>
   <button class="sm-item" data-ctx="game" id="btn-log">📜 <span class="sm-label">Diario e statistiche</span></button>
   <button class="sm-item" data-ctx="game" id="btn-draw" style="display:none;">🤝 <span class="sm-label">Proponi patta</span></button>
   <button class="sm-item" data-ctx="join lobby stats setup game" id="sm-rules">📖 <span class="sm-label">Regole</span></button>
   <div class="sm-set" id="sm-set">
     <div class="sm-set-title">Impostazioni</div>
-    <div class="ss-row"><span class="ss-l">Mano in orizzontale<button type="button" class="ss-i" data-i="hand" aria-label="Informazioni">i</button></span></div>
-    <div class="ss-note" data-n="hand"></div>
-    <div class="ss-seg" id="st-hand"><button data-v="right">Destri</button><button data-v="dyn">Dinamica</button><button data-v="left">Mancini</button></div>
-    <label class="ss-row main switch"><span class="ss-l">Aiuti grafici<button type="button" class="ss-i" data-i="aid" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aid"><i></i></label><div class="ss-note" data-n="aid"></div>
-    <div id="st-aids">
-      <label class="ss-row sub switch"><span class="ss-l">Carte non utilizzabili spente<button type="button" class="ss-i" data-i="aidDim" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidDim"><i></i></label><div class="ss-note" data-n="aidDim"></div>
-      <label class="ss-row sub switch"><span class="ss-l">Evidenzia lo sboboz<button type="button" class="ss-i" data-i="aidSb" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidSb"><i></i></label><div class="ss-note" data-n="aidSb"></div>
-      <label class="ss-row sub switch"><span class="ss-l">Tasto «Seleziona tutte»<button type="button" class="ss-i" data-i="aidAll" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidAll"><i></i></label><div class="ss-note" data-n="aidAll"></div>
-      <label class="ss-row sub switch"><span class="ss-l">Evita errori<button type="button" class="ss-i" data-i="aidSafe" aria-label="Informazioni">i</button></span><input type="checkbox" id="st-aidSafe"><i></i></label><div class="ss-note" data-n="aidSafe"></div>
+    <div id="ss-handbox">
+      <div class="ss-row"><span class="ss-t">Modalità orizzontale</span><button type="button" class="ss-i" data-i="hand" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></div>
+      <div class="ss-note" data-n="hand"></div>
+      <div class="ss-seg" id="st-hand"><button data-v="right">Destri</button><button data-v="dyn">Dinamica</button><button data-v="left">Mancini</button></div>
     </div>
-    <div class="ss-row"><span class="ss-l">Ritardo dei bot<button type="button" class="ss-i" data-i="delay" aria-label="Informazioni">i</button></span><b id="st-delay-v">nessuno</b></div>
+    <div class="ss-row main"><span class="ss-t">Aiuti grafici</span><button type="button" class="ss-i" data-i="aid" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aid"><i></i></label></div><div class="ss-note" data-n="aid"></div>
+    <div id="st-aids">
+      <div class="ss-row sub"><span class="ss-t">Carte non utilizzabili</span><button type="button" class="ss-i" data-i="aidDim" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aidDim"><i></i></label></div><div class="ss-note" data-n="aidDim"></div>
+      <div class="ss-row sub"><span class="ss-t">Evidenzia lo sboboz</span><button type="button" class="ss-i" data-i="aidSb" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aidSb"><i></i></label></div><div class="ss-note" data-n="aidSb"></div>
+      <div class="ss-row sub"><span class="ss-t">Tasto «Seleziona tutte»</span><button type="button" class="ss-i" data-i="aidAll" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aidAll"><i></i></label></div><div class="ss-note" data-n="aidAll"></div>
+      <div class="ss-row sub"><span class="ss-t">Evita errori</span><button type="button" class="ss-i" data-i="aidSafe" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aidSafe"><i></i></label></div><div class="ss-note" data-n="aidSafe"></div>
+    </div>
+    <div class="ss-row"><span class="ss-t">Ritardo dei bot</span><b id="st-delay-v">nessuno</b><button type="button" class="ss-i" data-i="delay" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></div>
     <div class="ss-note" data-n="delay"></div>
     <input type="range" id="st-delay" min="0" max="5" step="0.5" value="0">
   </div>
+  <button class="sm-item" data-ctx="game" id="sm-auto"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9.5 13h.01M14.5 13h.01M9.5 16.5h5"/><circle cx="12" cy="4" r="1"/></svg> <span class="sm-label">Autoplay</span></button>
   <div class="sm-spacer"></div>
   <div class="sm-info" id="sm-room"></div>
   <div class="sm-info" id="sm-ping"></div>
@@ -1884,8 +1909,8 @@ body{ background:
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.4.0',   // mostrata in fondo alla home
-  buildTime: '2026-11-01T12:56',   // data e ora di creazione di questo file (per le novità)
+  version: '1.4.2',   // mostrata in fondo alla home
+  buildTime: '2026-11-01T13:26',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -4885,7 +4910,11 @@ function pwaBar(){
       if(d>=10 && d<=90) localStorage.setItem('ilsboboz.sbar', String(d));
     }
     const v = parseInt(localStorage.getItem('ilsboboz.sbar')||'0', 10);
-    if(v>0) document.documentElement.style.setProperty('--pwa-top', v+'px');
+    if(v>0){
+      const top = Math.round(v*0.74);       // status bar; the rest of the bars is the bottom navigation area
+      document.documentElement.style.setProperty('--pwa-top', top+'px');
+      document.documentElement.style.setProperty('--pwa-bot', (v-top)+'px');
+    }
   }catch(e){}
 }
 pwaBar();
@@ -5506,8 +5535,10 @@ function renderPiles(){
   const me = myPlayer();
   const zone = V.phase==='play' ? currentZone(me) : null;
   const canDrop = Client.canAct() && (zone==='hand' || zone==='faceup');
-  dz.classList.toggle('droppable', canDrop);
-  dz.classList.toggle('has-selection', canDrop && Client.sel.length>0);
+  /* the gold frame is a "your turn" sign: it must not blink off while a batch is being processed */
+  const myTurnDrop = V.phase==='play' && V.turn===V.me && !me.finished && !me.auto && V.pendingPid<0 && (zone==='hand' || zone==='faceup');
+  dz.classList.toggle('droppable', myTurnDrop);
+  dz.classList.toggle('has-selection', myTurnDrop && Client.sel.length>0);
 }
 
 /* ping of an online player, next to the name (the host's own seat has none) */
@@ -6948,9 +6979,11 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
-  {v:'1.4.0', major:true, d:'2026-11-01', title:'Aggiunte aiuti di gioco richiesti dai giocatori', items:[
-    'Impostazioni nel menu, sempre a portata di mano: mano per destri, mancini o dinamica e aiuti grafici (carte spente, sboboz evidenziato, seleziona tutte, evita errori)',
-    'Ritardo dei bot deciso dall’host, autoplay e scansione del QR più comoda'
+  {v:'1.4.2', d:'2026-11-01'},
+  {v:'1.4.1', d:'2026-11-01'},
+  {v:'1.4.0', major:true, d:'2026-11-01', title:'Aggiunta aiuti di gioco richiesti dai giocatori', items:[
+    'Impostazioni modalità orizzontale e aiuti grafici',
+    'Ritardo dei bot e autoplay'
   ]},
   {v:'1.3.7', d:'2026-10-31', title:'Ping e dettagli', items:[
     'Ping sempre visibile (anche quello dell’host) e su una sola riga, righe della stanza più pulite, schermo intero automatico al primo tocco nell’app installata, margini di home e fine partita come in partita, numero 1 nei cerchi delle vittorie nelle statistiche, logo con le carte a sinistra dietro il titolo e a destra davanti, carte più grandi quando scarti o peschi'
@@ -6981,7 +7014,7 @@ const CHANGELOG = [
     'Decalcomania senza cerchio e dentro il tavolo, dorso con scritta più fitta, carte della home più alte su PC'
   ]},
   {v:'1.3.0', major:true, d:'2026-10-30', title:'Miglioramento grafico e design', items:[
-    'Nuovi font, icone SVG e menu a tre linee al posto della barra in alto',
+    'Nuovi font, icone SVG e menu',
     'Effetti delle carte come icone sul tavolo, decalcomania sul tavolo e scritta sul dorso'
   ]},
   {v:'1.2.3', d:'2026-10-29', title:'Pronti, rivincita e rifiniture', items:[
@@ -7926,11 +7959,11 @@ function wireUp(){
 const SET_INFO = {
   hand:'Destri: in orizzontale la mano è sempre a destra. Mancini: sempre a sinistra. Dinamica: cambia in base a come giri il telefono.',
   aid:'Attiva o disattiva tutti gli aiuti insieme. Sotto scegli quali tenere.',
-  aidDim:'Le carte che non puoi giocare in questo momento si spengono e non si possono selezionare.',
+  aidDim:'Le carte che non puoi giocare in questo momento vengono spente e non si possono selezionare.',
   aidSb:'Le carte che completano uno sboboz (le carte uguali che ti servono) brillano.',
   aidAll:'Da tre carte uguali in su, selezionandone una compare il tasto per prendere subito tutte quelle utili (al massimo quante servono per lo sboboz).',
   aidSafe:'Chiede conferma se giochi meno carte uguali di quelle che hai o più di quelle che bastano per lo sboboz.',
-  delay:'Un bot non gioca prima di questi secondi dall’inizio del suo turno. Lo decide l’host per tutta la partita.'
+  delay:'Un bot non gioca prima di questi secondi dall’inizio del suo turno, a ogni sua mossa. Lo decide l’host e può cambiarlo in qualsiasi momento, anche durante la partita.'
 };
 function syncSettings(){
   const fmt = v=>(v===0 ? 'nessuno' : String(v).replace('.',',')+' s');
@@ -7942,9 +7975,10 @@ function syncSettings(){
   const d = hostLike ? Store.opt('botDelay') : ((L && L.settings && typeof L.settings.botDelay==='number') ? L.settings.botDelay : 0);
   $('st-delay').value = d; $('st-delay').disabled = !hostLike; $('st-delay-v').textContent = fmt(d);
   $('st-delay').classList.toggle('ro', !hostLike);
-  document.querySelector('.ss-note[data-n="delay"]').dataset.t = hostLike ? SET_INFO.delay : 'Lo ha deciso l’host per tutta la partita.';
+  document.querySelector('.ss-note[data-n="delay"]').dataset.t = hostLike ? SET_INFO.delay : 'Lo decide l’host e può cambiarlo in qualsiasi momento, anche durante la partita.';
 }
 function initSettings(){
+  { const phone = navigator.maxTouchPoints>0 && Math.min(screen.width, screen.height) <= 600; $('ss-handbox').style.display = phone ? '' : 'none'; }   // only phones have a sideways game
   document.querySelectorAll('.ss-note').forEach(n=>{ n.textContent = SET_INFO[n.dataset.n] || ''; });
   document.querySelectorAll('.ss-i').forEach(b=>{ b.onclick = e=>{ e.preventDefault(); e.stopPropagation(); const n = document.querySelector('.ss-note[data-n="'+b.dataset.i+'"]'); if(n){ if(n.dataset.t) n.textContent = n.dataset.t; n.classList.toggle('open'); b.classList.toggle('on', n.classList.contains('open')); } }; });
   document.querySelectorAll('#st-hand button').forEach(b=>{ b.onclick = ()=>{ Store.setOpt('hand', b.dataset.v); try{ syncLand(); scheduleFitSettled(); }catch(e){} syncSettings(); }; });
