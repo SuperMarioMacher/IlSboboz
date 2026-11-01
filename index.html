@@ -1571,8 +1571,8 @@
 #home-screen{ padding-bottom:max(calc(env(safe-area-inset-bottom, 0px) * .3), 5px) !important; }
 #home-screen .app-version{ margin-bottom:0; }
 /* end-of-game results: the same margins as in the game (a band for the buttons on top) */
-#results-overlay{ padding:calc(max(var(--safe-top), var(--edge)) + var(--fab-h) + 4px) max(env(safe-area-inset-right), 6px) max(env(safe-area-inset-bottom), 8px) max(env(safe-area-inset-left), 6px) !important; box-sizing:border-box; }
-#results-box{ max-height:calc(var(--app-height) - max(var(--safe-top), var(--edge)) - var(--fab-h) - 4px - max(env(safe-area-inset-bottom), 8px)) !important; }
+#results-overlay{ padding:calc(max(var(--safe-top), var(--edge)) + var(--fab-h) + 7px) max(env(safe-area-inset-right), 6px) max(env(safe-area-inset-bottom), 6px) max(env(safe-area-inset-left), 6px) !important; box-sizing:border-box; }
+#results-box{ max-height:calc(var(--app-height) - max(var(--safe-top), var(--edge)) - var(--fab-h) - 7px - max(env(safe-area-inset-bottom), 6px)) !important; }
 html.land #results-overlay, html.fs.land #results-overlay{ padding-top:max(var(--safe-top), var(--edge)) !important; }
 html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top), var(--edge)) - max(env(safe-area-inset-bottom), 8px)) !important; }
 @media (min-width:900px) and (min-height:500px){
@@ -1687,6 +1687,35 @@ html.fs:not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--p
 html:not(.pwa):not(.fs):not(.land):not([data-screen="game"]) .screen{ padding-bottom:calc(var(--pwa-bot, 12px) + 10px) !important; }
 html:not(.pwa):not(.fs):not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--pwa-bot, 12px) + 5px) !important; }
 }
+
+/* 1.4.4: the party show keeps the same margins with and without full screen, and clears the buttons */
+@media (pointer:coarse){
+html.fs:not(.land):has(#party-overlay.on){ --safe-top: calc(var(--pwa-top, 0px) + var(--edge)); }
+html.fs:not(.land) #party-stage{ padding-bottom:calc(var(--pwa-bot, 0px) + 64px); }
+html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(--pwa-bot, 0px) + 12px); }
+}
+#party-stage{ padding-top:calc(max(var(--safe-top), var(--edge)) + var(--fab-h) + 8px) !important; }
+#party-overlay{ background:
+    linear-gradient(180deg, #0e271d 0, rgba(14,39,29,0) 150px) top/100% 150px no-repeat,
+    linear-gradient(0deg, #05130d 0, rgba(5,19,13,0) 150px) bottom/100% 150px no-repeat,
+    radial-gradient(ellipse at 50% 20%, #12503c 0%, #07201a 55%, #030b08 100%) !important; }
+.ps-spot{ background:radial-gradient(ellipse 85% 60% at 50% 24%, rgba(255,243,176,.34), rgba(255,243,176,.14) 45%, transparent 78%) !important;
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 150px, #000 calc(100% - 150px), transparent 100%); mask-image:linear-gradient(180deg, transparent 0, #000 150px, #000 calc(100% - 150px), transparent 100%); }
+
+/* menu: the title bar is outside the scrolling part, so it never moves with the end-of-scroll bounce */
+#side-menu{ padding:0 !important; overflow:hidden !important; gap:0 !important; }
+#side-menu .sm-head{ margin:0 !important; position:relative; z-index:5; padding-left:14px !important; }
+#sm-scroll{ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:8px; padding:8px 14px max(env(safe-area-inset-bottom,0px),14px); }
+
+/* 1.4.4 */
+.card.dim:not(.stack-top){ position:relative; }
+.card.dim.stack-top{ position:absolute; }
+.join-msg:empty{ display:none; }
+.join-note{ margin-top:-2px; }
+/* autoplay: the cards and what the bot does stay visible behind the notice */
+#auto-bar{ background:rgba(5,19,13,.32) !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; pointer-events:none; justify-content:flex-end; padding-bottom:10px; }
+#auto-bar > *{ pointer-events:auto; }
+#auto-bar > span{ background:rgba(5,19,13,.86); padding:6px 12px; border-radius:12px; }
 
 </style>
 </head>
@@ -1894,6 +1923,7 @@ html:not(.pwa):not(.fs):not(.land)[data-screen="home"] #home-screen{ padding-bot
 <div id="side-overlay"></div>
 <aside id="side-menu" aria-label="Menu">
   <div class="sm-head"><b>Menu</b></div>
+  <div id="sm-scroll">
   <button class="sm-item" data-ctx="none" id="sm-stats">📊 <span class="sm-label">Statistiche</span></button>
   <button class="sm-item" data-ctx="game" id="btn-log">📜 <span class="sm-label">Diario e statistiche</span></button>
   <button class="sm-item" data-ctx="game" id="btn-draw" style="display:none;">🤝 <span class="sm-label">Proponi patta</span></button>
@@ -1903,7 +1933,7 @@ html:not(.pwa):not(.fs):not(.land)[data-screen="home"] #home-screen{ padding-bot
     <div id="ss-handbox">
       <div class="ss-row"><span class="ss-t">Modalità orizzontale</span><button type="button" class="ss-i" data-i="hand" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></div>
       <div class="ss-note" data-n="hand"></div>
-      <div class="ss-seg" id="st-hand"><button data-v="right">Destri</button><button data-v="dyn">Dinamica</button><button data-v="left">Mancini</button></div>
+      <div class="ss-seg" id="st-hand"><button data-v="left">Mancini</button><button data-v="dyn">Dinamica</button><button data-v="right">Destri</button></div>
     </div>
     <div class="ss-row main"><span class="ss-t">Aiuti grafici</span><button type="button" class="ss-i" data-i="aid" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aid"><i></i></label></div><div class="ss-note" data-n="aid"></div>
     <div id="st-aids">
@@ -1923,6 +1953,7 @@ html:not(.pwa):not(.fs):not(.land)[data-screen="home"] #home-screen{ padding-bot
   <button class="sm-item danger" data-ctx="lobby" id="sm-leave"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/></svg> <span class="sm-label">Esci dalla stanza</span></button>
   <button class="sm-item danger" data-ctx="game setup" id="btn-end"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/></svg> <span class="sm-label">Termina</span></button>
   <div class="sm-info sm-ver" id="sm-ver"></div>
+  </div>
 </aside>
 
 <script id="config">
@@ -1930,8 +1961,8 @@ html:not(.pwa):not(.fs):not(.land)[data-screen="home"] #home-screen{ padding-bot
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.4.3',   // mostrata in fondo alla home
-  buildTime: '2026-11-01T18:03',   // data e ora di creazione di questo file (per le novità)
+  version: '1.4.4',   // mostrata in fondo alla home
+  buildTime: '2026-11-01T18:27',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -2326,7 +2357,7 @@ function pickUpTable(p){
 function checkFinished(p){
   if(p.finished) return true;
   if(p.hand.length===0 && p.slots.every(s=>!s.up && !s.down)){
-    p.finished = true;
+    p.finished = true; p.auto = false;       // autoplay ends with the player's game
     G.finishOrder.push(p);
     const place = G.finishOrder.length;
     emit('finish', {pid:p.id, place});
@@ -2334,7 +2365,7 @@ function checkFinished(p){
     const remaining = G.players.filter(pl=>!pl.finished);
     if(remaining.length<=1){
       if(remaining.length===1){
-        remaining[0].finished = true;
+        remaining[0].finished = true; remaining[0].auto = false;
         G.finishOrder.push(remaining[0]);
       }
       G.phase = 'ended';
@@ -2832,6 +2863,7 @@ function continueFacedownLegal(player, card, afterAll){
 /* Reveal one specific hidden card of `player` (slot index) and resolve
    it: the card becomes public for everyone, then either gets played
    or goes back to the player's hand (taking the table with it). */
+let LAST_FLIP = null;
 function revealFacedown(player, slotIndex, afterAll){
   G.actor = player.id;
   const slot = player.slots[slotIndex];
@@ -2839,6 +2871,7 @@ function revealFacedown(player, slotIndex, afterAll){
   slot.down = null;
   player.st.reveals++;
   emit('flip', {pid:player.id, slot:slotIndex, card:pub(card)});
+  LAST_FLIP = G.quiet ? null : G.evq[G.evq.length-1];
   processFacedownCard(player, card, afterAll);
 }
 
@@ -2876,6 +2909,8 @@ function processFacedownCard(player, card, afterAll){
     ask(player, 'jolly', {legal}, (rank)=>{
       if(!legal.includes(rank)) rank = aiResolveJollyRank('facedown', player);
       card.rank = rank; card.wasJolly = true;
+      /* the flip animation shows the value the jolly took, not the plain jolly (when it is still unsent) */
+      if(LAST_FLIP && LAST_FLIP.card && LAST_FLIP.card.uid===card.uid){ LAST_FLIP.card.rank = rank; LAST_FLIP.card.wasJolly = true; LAST_FLIP.card.suit = card.suit; }
       continueFacedownLegal(player, card, afterAll);
     });
     return;
@@ -4613,18 +4648,22 @@ function animateFlipThenFly(fromRect, toRect, card, cb, small, hold){
       setTimeout(()=>{
         // grow (if needed) from the mini reveal size up to full table
         // size while flying over, same technique as flyClone's growTo
-        const scaleX = fromRect.width / toRect.width;
-        const scaleY = fromRect.height / toRect.height;
+        const sc = fromRect.width / toRect.width;          // one uniform scale: the proportions are the final ones all along
         faceEl.style.transition = 'none';
         faceEl.style.width = toRect.width+'px';
         faceEl.style.height = toRect.height+'px';
-        faceEl.style.transformOrigin = 'top left';
-        faceEl.style.transform = `translate(0px,0px) scale(${scaleX}, ${scaleY})`;
+        faceEl.style.setProperty('--cw', toRect.width+'px'); faceEl.style.setProperty('--card-w', toRect.width+'px'); faceEl.style.setProperty('--card-h', toRect.height+'px');
+        faceEl.style.setProperty('--small-w', toRect.width+'px'); faceEl.style.setProperty('--small-h', toRect.height+'px');
+        faceEl.classList.remove('small');
+        faceEl.style.transformOrigin = 'center center';
+        const cx0 = fromRect.left + fromRect.width/2, cy0 = fromRect.top + fromRect.height/2;
+        faceEl.style.left = (cx0 - toRect.width/2)+'px'; faceEl.style.top = (cy0 - toRect.height/2)+'px';
+        faceEl.style.transform = `scale(${sc})`;
         faceEl.getBoundingClientRect();
         faceEl.style.transition = 'transform .38s cubic-bezier(.2,.8,.3,1)';
-        const dx = toRect.left - fromRect.left;
-        const dy = toRect.top - fromRect.top;
-        requestAnimationFrame(()=>{ faceEl.style.transform = `translate(${dx}px, ${dy}px) scale(1,1)`; });
+        const dx = (toRect.left + toRect.width/2) - cx0;
+        const dy = (toRect.top + toRect.height/2) - cy0;
+        requestAnimationFrame(()=>{ faceEl.style.transform = `translate(${dx}px, ${dy}px) scale(1)`; });
         setTimeout(()=>{ settle(faceEl, {hold}); if(cb) cb(); }, 390);
       }, 240);
     }, 160);
@@ -4651,7 +4690,7 @@ function flipThenFlyBack(card, fromRect, toRect){
       requestAnimationFrame(()=>{ back.style.transform = 'scaleX(1)'; });
       setTimeout(()=>{
         back.remove();
-        flyClone('<div class="card-back"></div>', fromRect, toRect, {rotate:(Math.random()*16-8), hold:true}, resolve);
+        flyClone('<div class="card-back"></div>', fromRect, toRect, {growTo:true, rotate:(Math.random()*16-8), hold:true}, resolve);
       }, 150);
     }, 140);
   });
@@ -5401,7 +5440,8 @@ async function playEvent(ev){
   const mine = ev.pid===V.me;
   switch(ev.t){
     case 'play': {
-      Fx.clearFlash(); Fx._hold = 0;       // a new card on the table: the old icon goes away at once
+      Fx._hold = 0;       // a new card on the table: the old icon goes away when the card starts to cover it
+      { const ep = playEpoch; setTimeout(()=>{ if(ep===Client.epoch) Fx.clearFlash(); }, 190); }
       const toRect = tableRect();
       const sel = mine ? (ev.zone==='hand' ? '#human-hand' : '#human-stacks') : '.opp-seat[data-pid="'+ev.pid+'"]';
       const flights = ev.cards.map((c,i)=>{
@@ -5452,7 +5492,8 @@ async function playEvent(ev){
       break;
     }
     case 'flip': {
-      Fx.clearFlash(); Fx._hold = 0;
+      Fx._hold = 0;
+      { const ep = playEpoch; setTimeout(()=>{ if(ep===Client.epoch) Fx.clearFlash(); }, 760); }
       const sel = mine ? '#human-stacks' : '.opp-seat[data-pid="'+ev.pid+'"]';
       const fromEl = document.querySelector(sel+' .stack-slot[data-slot-idx="'+ev.slot+'"]');
       const toRect = tableRect();
@@ -5476,7 +5517,7 @@ async function playEvent(ev){
         break;   // my own card already flew out of the dialog into my hand
       } else {
         const t = document.querySelector('.opp-seat[data-pid="'+ev.pid+'"] [data-role="hand-pile"]');
-        if(t) await fly('<div class="card-back"></div>', from, t.getBoundingClientRect(), {rotate:0, hold:true});
+        { const mr = miniCardRectNear(ev.pid); if(t && mr) await fly('<div class="card-back"></div>', from, mr, {growTo:true, rotate:0, hold:true}); }
       }
       break;
     }
@@ -5683,7 +5724,11 @@ function canMakeSboboz(V, p, rank){
   const have = handCopies(p, rank) + handJollies(p);
   return need<=have && isLegalRank(V, rank, 'hand', {p, n:need});
 }
-/* the "select all" shortcut: the equals of the selected card, up to the sboboz */
+/* does this rank make a sboboz only with the help of a jolly? */
+function sbobozNeedsJolly(V, p, rank){
+  return canMakeSboboz(V, p, rank) && handCopies(p, rank) < sbobozCap(V, rank);
+}
+/* the "select all" shortcut: the equals of the selected card, up to the sboboz (jolly included when it completes it) */
 function selectAllInfo(V, p){
   if(!aidOn('aidAll') || Client.sel.length===0) return null;
   const sel = p.hand.filter(c=>Client.sel.includes(c.uid));
@@ -5691,11 +5736,15 @@ function selectAllInfo(V, p){
   if(!first) return null;
   const copies = handCopies(p, first.rank);
   if(copies<3) return null;
-  const target = Math.min(copies, sbobozCap(V, first.rank));
-  const jol = sel.filter(c=>c.rank==='JOLLY').length;
+  const cap = sbobozCap(V, first.rank);
+  const jolSel = sel.filter(c=>c.rank==='JOLLY').length;
+  const useJ = sbobozNeedsJolly(V, p, first.rank) ? cap - copies : 0;
+  const jol = Math.min(handJollies(p), Math.max(jolSel, useJ));
+  const n = Math.min(copies + jol, cap);
+  const cop = n - jol;
   const have = sel.filter(c=>c.rank===first.rank).length;
-  if(have + jol >= target || target - jol < 1) return null;
-  return {rank:first.rank, target:target - jol, n:target};
+  if(cop < 1 || (have===cop && jolSel===jol)) return null;
+  return {rank:first.rank, n, jol, cop};
 }
 /* the "select all" pill floats right above the first card the player selected */
 function placeSelectAll(info){
@@ -5716,8 +5765,9 @@ function placeSelectAll(info){
 function applySelectAll(){
   const V = Client.V, p = myPlayer(), info = selectAllInfo(V, p);
   if(!info) return;
-  const jollies = p.hand.filter(c=>c.rank==='JOLLY' && Client.sel.includes(c.uid)).map(c=>c.uid);
-  const same = p.hand.slice().sort(handCompare).filter(c=>c.rank===info.rank).slice(0, info.target).map(c=>c.uid);
+  const js = p.hand.filter(c=>c.rank==='JOLLY');
+  const jollies = js.filter(c=>Client.sel.includes(c.uid)).concat(js.filter(c=>!Client.sel.includes(c.uid))).slice(0, info.jol).map(c=>c.uid);
+  const same = p.hand.slice().sort(handCompare).filter(c=>c.rank===info.rank).slice(0, info.cop).map(c=>c.uid);
   Client.sel = jollies.concat(same);
   render();
 }
@@ -5799,7 +5849,7 @@ function renderHuman(){
         el.classList.add('selectable');
         if(Client.sel.includes(c.uid)) el.classList.add('selected');
         el.onclick = ()=>toggleSelection(c,'hand');
-        if(aidOn('aidSb') && canMakeSboboz(V, p, c.rank)) el.classList.add('sb-hint');
+        if(aidOn('aidSb') && (c.rank==='JOLLY' ? RANKS.some(r=>sbobozNeedsJolly(V, p, r)) : canMakeSboboz(V, p, c.rank))) el.classList.add('sb-hint');
       }
     }
     hd.appendChild(el);
@@ -6340,7 +6390,7 @@ const PartyShow = {
   board(data, crowns, hide, bump){
     const rows = data.final.slice().sort((a,b)=> hide ? (a.mid-b.mid) : ((crowns[b.mid]-crowns[a.mid]) || (a.mid-b.mid)));
     return `<div class="ps-btitle">👑 Corone${hide?' · totali nascosti!':''}</div>` + rows.map(f=>
-      `<div class="ps-brow${bump && bump.includes(f.mid)?' bump':''}${f.mid===R.myMid?' me':''}">${PartyShow.ava(f,'sm')}<span class="ps-bname">${esc(f.name)}</span><span class="ps-bcr">${hide?'<i>?</i>':`${crowns[f.mid]}`}<em>👑</em></span></div>`).join('');
+      `<div class="ps-brow${bump && bump.includes(f.mid)?' bump':''}${f.mid===R.myMid?' me':''}">${PartyShow.ava(f,'sm')}<span class="ps-bname">${esc(f.name)}</span><span class="ps-bcr"><span class="crn">${hide?'<i>?</i>':`${crowns[f.mid]}`}</span><em>👑</em></span></div>`).join('');
   },
   countUp(elm, text, v, tok){
     // numbers climb quickly to their value; anything else just appears
@@ -6531,7 +6581,7 @@ const PartyShow = {
     // 4th place and below
     const restEl = PartyShow.el('ps-rest');
     for(const f of rest){
-      restEl.insertAdjacentHTML('afterbegin', `<div class="ps-rrow${f.mid===R.myMid?' me':''}">${PartyShow.ava(f,'sm')}<span class="ps-rnk">${f.rank}°</span><span class="ps-name">${esc(f.name)}</span><span class="ps-rcr">${f.total} 👑</span></div>`);
+      restEl.insertAdjacentHTML('afterbegin', `<div class="ps-rrow${f.mid===R.myMid?' me':''}">${PartyShow.ava(f,'sm')}<span class="ps-rnk">${f.rank}°</span><span class="ps-name">${esc(f.name)}</span><span class="ps-rcr"><span class="crn">${f.total}</span> 👑</span></div>`);
       PartyShow.buzz(20);
       await PartyShow.wait(1500, tok);
     }
@@ -6540,7 +6590,7 @@ const PartyShow = {
       if(!group.length){ stepEl.classList.add('up','empty'); await PartyShow.wait(500, tok); return; }
       stepEl.classList.add('up');
       await PartyShow.wait(big ? 1800 : 1100, tok);
-      pp.innerHTML = group.map(f=>`<div class="ps-person${f.mid===R.myMid?' me':''}">${r===1?'<span class="ps-hat">👑</span>':''}${PartyShow.ava(f,'xl')}<span class="ps-pname">${esc(f.name)}</span><span class="ps-pcr">${f.total} 👑</span><span class="ps-pdet">${f.wins} vittori${f.wins===1?'a':'e'} + ${f.bonusCount} bonus</span></div>`).join('');
+      pp.innerHTML = group.map(f=>`<div class="ps-person${f.mid===R.myMid?' me':''}">${r===1?'<span class="ps-hat">👑</span>':''}${PartyShow.ava(f,'xl')}<span class="ps-pname">${esc(f.name)}</span><span class="ps-pcr"><span class="crn">${f.total}</span> 👑</span><span class="ps-pdet">${f.wins} vittori${f.wins===1?'a':'e'} + ${f.bonusCount} bonus</span></div>`).join('');
       requestAnimationFrame(()=>pp.classList.add('in'));
       PartyShow.buzz(r===1 ? [120,60,120,60,260] : 60);
       PartyShow.burstAt(pp, r===1 ? 140 : 40, {speed:r===1?11:6});
@@ -6549,7 +6599,7 @@ const PartyShow = {
         const g2 = byRank(r2), p2 = PartyShow.el('pp'+r2);
         if(!g2.length){ PartyShow.el('st'+r2).classList.add('up','empty'); continue; }
         PartyShow.el('st'+r2).classList.add('up');
-        p2.innerHTML = g2.map(f=>`<div class="ps-person${f.mid===R.myMid?' me':''}">${PartyShow.ava(f,'xl')}<span class="ps-pname">${esc(f.name)}</span><span class="ps-pcr">${f.total} 👑</span><span class="ps-pdet">${f.wins} vittori${f.wins===1?'a':'e'} + ${f.bonusCount} bonus</span></div>`).join('');
+        p2.innerHTML = g2.map(f=>`<div class="ps-person${f.mid===R.myMid?' me':''}">${PartyShow.ava(f,'xl')}<span class="ps-pname">${esc(f.name)}</span><span class="ps-pcr"><span class="crn">${f.total}</span> 👑</span><span class="ps-pdet">${f.wins} vittori${f.wins===1?'a':'e'} + ${f.bonusCount} bonus</span></div>`).join('');
         requestAnimationFrame(()=>p2.classList.add('in'));
         PartyShow.burstAt(p2, 40, {speed:6});
       }
@@ -6586,7 +6636,7 @@ const PartyShow = {
     const st = PartyShow.el('party-stage');
     const isHost = R.role==='host';
     const bmap = {}; PARTY_BONUSES.forEach(b=>{ bmap[b.id] = b; });
-    const det = data.final.map(f=>`<div class="ps-drow${f.mid===R.myMid?' me':''}"><div class="ps-dhead">${PartyShow.ava(f,'sm')}<b>${f.rank}° ${esc(f.name)}</b><span>${f.total} 👑</span></div>
+    const det = data.final.map(f=>`<div class="ps-drow${f.mid===R.myMid?' me':''}"><div class="ps-dhead">${PartyShow.ava(f,'sm')}<b>${f.rank}° ${esc(f.name)}</b><span><span class="crn">${f.total}</span> 👑</span></div>
       <div class="ps-dbody">${f.wins} vittori${f.wins===1?'a':'e'}${f.bonusIds.length ? ' · ' + f.bonusIds.map(id=>`${bmap[id].emoji} ${esc(bmap[id].title)}`).join(' · ') : ' · nessun bonus'}</div>${PartyShow.statsHtml(f.stats, data.nPlayers>=7)}</div>`).join('');
     const acts = document.createElement('div');
     acts.className = 'ps-actions';
@@ -6886,7 +6936,7 @@ function partyCard(p){
   if(open){
     const rows = p.rows.slice().sort((a,b)=>a.pl-b.pl);
     h += `<div class="game-body"><div class="g-sum"><span>⏱ ${fmtDur(p.secs)}</span><span>▶ ${p.moves||0} mosse</span>${p.rounds?`<span>🔄 ${p.rounds} giri</span>`:''}</div>
-      <div class="g-rank">${rows.map(r=>`<div class="g-row ${r.me?'me':''}"><span class="g-pl">${r.pl}°</span><span class="g-nm">${esc(r.me?'Tu':r.w)}${r.k==='b'?' <small>bot</small>':''}<small class="g-sub">${r.wins} vittori${r.wins===1?'a':'e'}${(r.bo&&r.bo.length)?' · '+r.bo.map(bmap).join(' · '):''}</small></span><span class="g-st"><i>${r.cr} 👑</i></span></div>`).join('')}</div>
+      <div class="g-rank">${rows.map(r=>`<div class="g-row ${r.me?'me':''}"><span class="g-pl">${r.pl}°</span><span class="g-nm">${esc(r.me?'Tu':r.w)}${r.k==='b'?' <small>bot</small>':''}<small class="g-sub">${r.wins} vittori${r.wins===1?'a':'e'}${(r.bo&&r.bo.length)?' · '+r.bo.map(bmap).join(' · '):''}</small></span><span class="g-st"><i><span class="crn">${r.cr}</span> 👑</i></span></div>`).join('')}</div>
       <button class="btn-secondary danger g-del" data-delp="${esc(p.id)}">Elimina questo party</button></div>`;
   }
   return h + '</div>';
@@ -7005,6 +7055,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.4.4', d:'2026-11-01'},
   {v:'1.4.3', d:'2026-11-01'},
   {v:'1.4.2', d:'2026-11-01'},
   {v:'1.4.1', d:'2026-11-01'},
@@ -8071,7 +8122,7 @@ updateFullscreenButtons();
   }catch(e){}
 })();
 
-window.__dbg={canMakeSboboz,sbobozCap,currentTopStreak,cardHtml,flyClone,showResults,resultsVisible,renderResultsActions,Fx,icon,Party,PartyShow,Eng:{aiStep,resolvePendingByAI,initGame,aiChooseFaceUp,skipToEnd,buildResults,aiPlayHand,aiPlayFaceUp,currentZone,resolvePlay,pickUpTable,checkAutoSboboz,applyEffect,log},isLegalRank,hasEffectContextual,hasAnyLegalInHand,humanAction,render,R,Client,UI,Store,Host,Room,Guest,Modal,heldClones,get G(){return G;}};
+window.__dbg={selectAllInfo,sbobozNeedsJolly,myPlayer,canMakeSboboz,sbobozCap,currentTopStreak,cardHtml,flyClone,showResults,resultsVisible,renderResultsActions,Fx,icon,Party,PartyShow,Eng:{aiStep,resolvePendingByAI,initGame,aiChooseFaceUp,skipToEnd,buildResults,aiPlayHand,aiPlayFaceUp,currentZone,resolvePlay,pickUpTable,checkAutoSboboz,applyEffect,log},isLegalRank,hasEffectContextual,hasAnyLegalInHand,humanAction,render,R,Client,UI,Store,Host,Room,Guest,Modal,heldClones,get G(){return G;}};
 
 })();
 </script>
