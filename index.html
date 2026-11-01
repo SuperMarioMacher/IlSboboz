@@ -1679,6 +1679,15 @@ html.fs:not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--p
 @media (min-width:900px){ #side-menu{ width:calc(400px / var(--mz,1)); } }
 #side-menu .sm-head{ flex:0 0 auto; }
 
+/* 1.4.3b */
+.card.dim, .card.dim.selectable{ pointer-events:auto !important; }
+#side-menu .sm-head{ padding-top:calc(max(var(--safe-top), var(--edge)) / var(--mz,1)) !important; padding-bottom:calc(var(--edge) / var(--mz,1)) !important; }
+#side-menu .sm-head b{ line-height:calc(var(--fab-h) / var(--mz,1)); }
+@media (pointer:coarse){
+html:not(.pwa):not(.fs):not(.land):not([data-screen="game"]) .screen{ padding-bottom:calc(var(--pwa-bot, 12px) + 10px) !important; }
+html:not(.pwa):not(.fs):not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--pwa-bot, 12px) + 5px) !important; }
+}
+
 </style>
 </head>
 <body>
@@ -1922,7 +1931,7 @@ html.fs:not(.land)[data-screen="home"] #home-screen{ padding-bottom:calc(var(--p
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
   version: '1.4.3',   // mostrata in fondo alla home
-  buildTime: '2026-11-01T13:45',   // data e ora di creazione di questo file (per le novità)
+  buildTime: '2026-11-01T18:03',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -5622,6 +5631,8 @@ function renderOpponents(){
   }
 }
 
+/* tapping a switched-off card never reaches the card behind it: it only clears the selection */
+function clearSelectionTap(){ if(Client.sel.length){ Client.sel = []; render(); } }
 function toggleSelection(card, zone){
   const me = myPlayer();
   const idx = Client.sel.indexOf(card.uid);
@@ -5746,7 +5757,7 @@ function renderHumanStacks(){
       const el = wrap.firstElementChild;
       el.classList.add('stack-top');
       if(canActFaceup){
-        if(aidOn('aidDim') && !cardUsable(V, p, slot.up, 'faceup')) el.classList.add('dim');
+        if(aidOn('aidDim') && !cardUsable(V, p, slot.up, 'faceup')){ el.classList.add('dim'); el.onclick = clearSelectionTap; }
         else {
           el.classList.add('selectable');
           if(Client.sel.includes(slot.up.uid)) el.classList.add('selected');
@@ -5783,7 +5794,7 @@ function renderHuman(){
     wrap.innerHTML = cardHtml(c);
     const el = wrap.firstElementChild;
     if(canActHand){
-      if(aidOn('aidDim') && !cardUsable(V, p, c, 'hand')) el.classList.add('dim');
+      if(aidOn('aidDim') && !cardUsable(V, p, c, 'hand')){ el.classList.add('dim'); el.onclick = clearSelectionTap; }
       else {
         el.classList.add('selectable');
         if(Client.sel.includes(c.uid)) el.classList.add('selected');
