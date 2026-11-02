@@ -1717,6 +1717,16 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
 #auto-bar > *{ pointer-events:auto; }
 #auto-bar > span{ background:rgba(5,19,13,.86); padding:6px 12px; border-radius:12px; }
 
+/* 1.4.5 */
+.card.fresh{ animation:freshPulse 1.5s ease-out 1; }
+@keyframes freshPulse{ 0%{ box-shadow:0 0 0 3px rgba(255,222,130,1), 0 0 22px 8px rgba(232,192,95,.8); } 100%{ box-shadow:0 0 0 0 rgba(255,222,130,0), 0 0 0 0 rgba(232,192,95,0); } }
+.crn{ display:inline-block; min-width:.8em; text-align:center; font-variant-numeric:tabular-nums; }
+.pb-crowns b{ min-width:.8em !important; text-align:center !important; }
+/* bonus crowns: the "Corona bonus n di N" tag sits in the row of the fullscreen and menu buttons */
+.ps-head{ margin-top:calc(-1 * (var(--fab-h) + 8px)) !important; height:var(--fab-h); width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding-right:calc(var(--fab-h) * 2.45 + 22px); }
+/* end-of-game results are wider on a computer */
+@media (min-width:900px){ #results-box{ max-width:640px !important; } }
+
 </style>
 </head>
 <body>
@@ -1961,8 +1971,8 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.4.4',   // mostrata in fondo alla home
-  buildTime: '2026-11-01T18:27',   // data e ora di creazione di questo file (per le novità)
+  version: '1.4.5',   // mostrata in fondo alla home
+  buildTime: '2026-11-01T20:08',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -2773,7 +2783,8 @@ function resolvePlay(player, cards, zone, afterAll){
     slotIndex = player.slots.findIndex(s=>s.up && s.up.uid===card.uid);
     if(slotIndex>=0) player.slots[slotIndex].up = null;
   }
-  emit('play', {pid:player.id, cards:cards.map(pub), zone, slots: slotIndex>=0 ? [slotIndex] : []});
+  const playEv = {pid:player.id, cards:cards.map(pub), zone, slots: slotIndex>=0 ? [slotIndex] : []};
+  emit('play', playEv);
   player.st.played += cards.length;
   if(cards.some(c=>c.wasJolly)) player.st.jollies++;
   if(cards[0].rank==='K') player.st.kings += cards.length;
@@ -2787,6 +2798,7 @@ function resolvePlay(player, cards, zone, afterAll){
   let first = cards, rest = [];
   if(rank!=='K' && kBefore < tH && kBefore + cards.length > tH){
     first = cards.slice(0, tH-kBefore); rest = cards.slice(tH-kBefore);
+    playEv.cards = first.map(pub);          // the extra cards fly in after the sboboz (see afterFirst)
   }
   G.table.push(...cards);
   const sbobozImminent = rest.length>0 ? true : wouldTriggerSboboz();
@@ -2818,6 +2830,7 @@ function resolvePlay(player, cards, zone, afterAll){
       const nFirst = G.table.length - rest.length;
       doSboboz(`${tH} carte di pari valore di fila`, G.table.slice(0,nFirst), G.table.slice(nFirst), false, false);
       log(`↳ ${rest.length===1?'la carta in più viene giocata':'le '+rest.length+' carte in più vengono giocate'} subito dopo lo sboboz.`);
+      emit('play', {pid:player.id, cards:rest.map(pub), zone, slots:[]});
       applyEffect(rank, player, zone, rest, finish, slotIndex, false);
     };
     if(wasSuppressed){
@@ -3784,6 +3797,11 @@ const Room = {
       Host.afterStep(true);
     };
     if(R.phase==='lobby') Room.lobbyChanged();            // greyed out while we wait
+    else if(!immediate && R.phase==='game' && G && (G.phase==='play' || G.phase==='setup') && G.players[m.pid]){
+      // everybody sees that the wait has started (a player who left on purpose never gets here)
+      toast(`⏳ ${G.players[m.pid].name} ha perso la connessione: ${Math.round(GRACE_GAME/1000)} secondi per rientrare`);
+      G.seq++; Host.broadcastBatch();
+    }
     if(immediate) drop();
     else m._grace = setTimeout(drop, R.phase==='lobby' ? GRACE_LOBBY : GRACE_GAME);
   },
@@ -5169,6 +5187,7 @@ const Fx = {
   /* the effects that stay until somebody plays: constraint and "next effect cancelled" */
   pinned(V){
     const l = Fx.layer(); if(!l) return;
+    if(Fx._noPin) return;
     const topUid = (V && V.table && V.table.length) ? V.table[V.table.length-1].uid : 'empty';
     if(Fx._top!==undefined && Fx._top!==topUid){
       if(Fx._armed && Date.now()-Fx._armed<2500) Fx._armed = 0;       // this change is the move that caused the event
@@ -5186,6 +5205,7 @@ const Fx = {
     Fx.place();
   },
   /* short-lived events */
+  hidePinned(){ const b = document.querySelector('#fx-layer .fx-pinned'); if(b) b.remove(); },
   clearFlash(){
     const l = document.getElementById('fx-layer'); if(!l) return;
     l.querySelectorAll('.fx-flash').forEach(r=>r.remove()); l.classList.remove('has-flash'); Fx.closeTip();
@@ -5255,6 +5275,28 @@ let animating = false;
 
 function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
 let playEpoch = 0;   // epoch of the event being animated: a flight that starts after the game was left is dropped
+/* when does a card flying to the table start to cover the effect icon in the middle of it? (ms after take-off, same curve as flyClone) */
+function overlapDelay(from, to){
+  try{
+    const l = document.getElementById('fx-layer');
+    const icon = (l && parseFloat(l.style.getPropertyValue('--fx-s'))) || 60;
+    const dx = (from.left+from.width/2)-(to.left+to.width/2), dy = (from.top+from.height/2)-(to.top+to.height/2);
+    const dist = Math.hypot(dx, dy);
+    const cur = (from.width/to.width + 1)/2;
+    const thr = icon/2 + to.height*cur/2;
+    if(dist<=thr) return 0;
+    const need = 1 - thr/dist;
+    const bx = s=>3*(1-s)*(1-s)*s*.2 + 3*(1-s)*s*s*.3 + s*s*s;
+    const by = s=>3*(1-s)*(1-s)*s*.8 + 3*(1-s)*s*s + s*s*s;
+    let lo = 0, hi = 1;
+    for(let i=0;i<24;i++){ const m = (lo+hi)/2; if(by(m)<need) lo = m; else hi = m; }
+    return Math.max(0, Math.round(bx((lo+hi)/2)*380));
+  }catch(e){ return 190; }
+}
+function dropEffectIcons(after){
+  const ep = playEpoch; Fx._noPin = true;
+  setTimeout(()=>{ if(ep===Client.epoch){ Fx.clearFlash(); Fx.hidePinned(); } }, after);
+}
 function fly(html, from, to, opts){ if(playEpoch!==Client.epoch) return Promise.resolve(); return new Promise(res=>flyClone(html, from, to, opts||{}, res)); }
 
 const Client = {
@@ -5267,7 +5309,7 @@ const Client = {
     Client.prompt = null; Client.sel = []; Client.acting = false; Client.setupSel = [];
     Client.results = null; Client.roomGone = ''; Client.msg = ''; animating = false; clearHeld();
     const L = document.getElementById('anim-layer'); if(L) L.innerHTML = '';
-    if(typeof Fx!=='undefined' && Fx.clearFlash) Fx.clearFlash();
+    if(typeof Fx!=='undefined' && Fx.clearFlash){ Fx._noPin = false; Fx.clearFlash(); }
     hideResults();
     if(typeof PartyShow!=='undefined') PartyShow.stop();
     Modal.close();
@@ -5441,16 +5483,17 @@ async function playEvent(ev){
   switch(ev.t){
     case 'play': {
       Fx._hold = 0;       // a new card on the table: the old icon goes away when the card starts to cover it
-      { const ep = playEpoch; setTimeout(()=>{ if(ep===Client.epoch) Fx.clearFlash(); }, 190); }
       const toRect = tableRect();
       const sel = mine ? (ev.zone==='hand' ? '#human-hand' : '#human-stacks') : '.opp-seat[data-pid="'+ev.pid+'"]';
       const flights = ev.cards.map((c,i)=>{
         const src = document.querySelector(sel+' [data-uid="'+c.uid+'"]');
         const from = src ? src.getBoundingClientRect() : (miniCardRectNear(ev.pid) || toRect);
+        if(i===0) dropEffectIcons(overlapDelay(from, toRect));
         if(src) src.style.visibility = 'hidden';
         return wait(i*70).then(()=>fly(cardHtml(c), from, toRect, {growTo:true, hold:true}));
       });
       await Promise.all(flights);
+      Fx._noPin = false;
       break;
     }
     case 'pickup': {
@@ -5493,13 +5536,14 @@ async function playEvent(ev){
     }
     case 'flip': {
       Fx._hold = 0;
-      { const ep = playEpoch; setTimeout(()=>{ if(ep===Client.epoch) Fx.clearFlash(); }, 760); }
       const sel = mine ? '#human-stacks' : '.opp-seat[data-pid="'+ev.pid+'"]';
       const fromEl = document.querySelector(sel+' .stack-slot[data-slot-idx="'+ev.slot+'"]');
       const toRect = tableRect();
       const fromRect = fromEl ? fromEl.getBoundingClientRect() : toRect;
       if(fromEl) fromEl.style.visibility = 'hidden';
+      dropEffectIcons(560 + overlapDelay(fromRect, toRect));
       await new Promise(res=>animateFlipThenFly(fromRect, toRect, ev.card, res, !mine, true));
+      Fx._noPin = false;
       break;
     }
     case 'discard': {
@@ -5514,7 +5558,8 @@ async function playEvent(ev){
       if(!sp) break;
       const from = cardRectIn(sp);
       if(mine){
-        break;   // my own card already flew out of the dialog into my hand
+        if(ev.card) Client.fresh = ev.card.uid;      // my own card already flew out of the dialog into my hand: it is shown to me when the hand is drawn
+        break;
       } else {
         const t = document.querySelector('.opp-seat[data-pid="'+ev.pid+'"] [data-role="hand-pile"]');
         { const mr = miniCardRectNear(ev.pid); if(t && mr) await fly('<div class="card-back"></div>', from, mr, {growTo:true, rotate:0, hold:true}); }
@@ -5862,6 +5907,10 @@ function renderHuman(){
     const fitStep = (avail - w) / (hc.length - 1);
     const step = Math.min(idealStep, Math.max(26, fitStep));
     for(let i=1;i<hc.length;i++) hc[i].style.marginLeft = (step - w) + 'px';
+  }
+  if(Client.fresh){
+    const fe = Array.from(hc).find(el=>el.dataset.uid===Client.fresh); Client.fresh = null;
+    if(fe){ fe.classList.add('fresh'); setTimeout(()=>{ try{ const hr = hd.getBoundingClientRect(), r = fe.getBoundingClientRect(); if(r.left<hr.left || r.right>hr.right) hd.scrollLeft += (r.left + r.width/2) - (hr.left + hr.width/2); }catch(e){} }, 30); }
   }
   hd.style.overflow = hd.scrollWidth > hd.clientWidth + 1 ? '' : 'visible';   // nothing to clip: don't cut shadows / raised cards
   document.getElementById('hand-label').textContent = `la tua mano (${p.hand.length})`;
@@ -7055,6 +7104,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.4.5', d:'2026-11-01'},
   {v:'1.4.4', d:'2026-11-01'},
   {v:'1.4.3', d:'2026-11-01'},
   {v:'1.4.2', d:'2026-11-01'},
@@ -7994,6 +8044,8 @@ function wireUp(){
   });
   const openMenu = o=>{
     if(o){
+      document.querySelectorAll('.ss-note.open').forEach(n=>n.classList.remove('open'));      // the explanations always start closed
+      document.querySelectorAll('.ss-i.on').forEach(b=>b.classList.remove('on'));
       const ctx = UI.current;
       $('side-menu').querySelectorAll('.sm-item').forEach(b=>b.classList.toggle('ctx-off', !(b.dataset.ctx||'').split(' ').includes(ctx)));
       const online = (R.role==='host' && R.online) || R.role==='guest';
