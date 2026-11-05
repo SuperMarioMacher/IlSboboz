@@ -1723,7 +1723,7 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
 .crn{ display:inline-block; min-width:.8em; text-align:center; font-variant-numeric:tabular-nums; }
 .pb-crowns b{ min-width:.8em !important; text-align:center !important; }
 /* bonus crowns: the "Corona bonus n di N" tag sits in the row of the fullscreen and menu buttons */
-.ps-head{ margin-top:calc(-1 * (var(--fab-h) + 8px)) !important; height:var(--fab-h); width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; padding-right:calc(var(--fab-h) * 2.45 + 22px); }
+.ps-head{ margin-top:calc(-1 * (var(--fab-h) + 8px)) !important; height:var(--fab-h); width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; }
 /* end-of-game results are wider on a computer */
 @media (min-width:900px){ #results-box{ max-width:640px !important; } }
 
@@ -1971,8 +1971,8 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.4.5',   // mostrata in fondo alla home
-  buildTime: '2026-11-01T20:08',   // data e ora di creazione di questo file (per le novità)
+  version: '1.4.6',   // mostrata in fondo alla home
+  buildTime: '2026-11-03T10:38',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -2155,12 +2155,14 @@ function aiChooseFaceUp(p){
   const slots = jolly ? 4 : 5;
   const byValueDesc = (a,b)=> rankValue(b.rank)-rankValue(a.rank);
   const fours = p.hand.filter(c=>c.rank==='4');
-  const others = p.hand.filter(c=>c.rank!=='JOLLY' && c.rank!=='4').sort(byValueDesc);
+  const others = p.hand.filter(c=>c.rank!=='JOLLY' && c.rank!=='4' && c.rank!=='2').sort(byValueDesc);
+  // a 2 is almost a jolly: up to two of them are worth showing
+  const twos = p.hand.filter(c=>c.rank==='2').slice(0, 2);
   // start from the best cards of the hand...
-  let chosen = others.slice(0, slots);
+  let chosen = twos.concat(others.slice(0, slots - twos.length));
   const weakestIdx = ()=>{
     let wi = -1;
-    chosen.forEach((c,i)=>{ if(c.rank!=='4' && (wi<0 || rankValue(c.rank)<rankValue(chosen[wi].rank))) wi = i; });
+    chosen.forEach((c,i)=>{ if(c.rank!=='4' && c.rank!=='2' && (wi<0 || rankValue(c.rank)<rankValue(chosen[wi].rank))) wi = i; });
     return wi;
   };
   // ...a 4 face-up flips the hidden card under it (good), but it is a dead
@@ -5304,7 +5306,7 @@ const Client = {
   rvotes:[], roomGone:'', setupSel:[], results:null, recorded:{}, resultsOnline:false, msg:'', epoch:0,
 
   reset(){
-    Client.epoch++;
+    Client.epoch++; Client.holdJolly = false;
     Client.V = null; Client.queue = []; Client.busy = false; Client.idleCbs = [];
     Client.prompt = null; Client.sel = []; Client.acting = false; Client.setupSel = [];
     Client.results = null; Client.roomGone = ''; Client.msg = ''; animating = false; clearHeld();
@@ -5375,16 +5377,17 @@ const Client = {
       const prevPhase = Client.V ? Client.V.phase : null;
       Client.V = b.view;
       Client.acting = false;
+      if(Client.holdJolly && b.view.pendingPid!==b.view.me) Client.holdJolly = false;
       if(Client.promptOpen && b.view.pendingPid!==b.view.me){ Client.promptOpen = false; Modal.close(); }   // a bot answered for me (autoplay)
       if(b.view.phase==='play' || b.view.phase==='setup' || b.view.phase==='ended' || b.view.phase==='stalemate'){
         if(b.view.phase==='setup' && prevPhase!=='setup'){ Client.setupSel = []; Client.sel = []; Client.msg = ''; hideResults(); }
         render();
       }
-      clearHeld();
+      if(!Client.holdJolly) clearHeld();
     }
     Client.busy = false; animating = false;
     render();
-    clearHeld();
+    if(!Client.holdJolly) clearHeld();
     Client.flushIdle();
     if(Client.prompt) Client.openPrompt();
   },
@@ -5394,7 +5397,7 @@ const Client = {
     const msg = Client.prompt;
     if(!msg) return;
     Client.prompt = null; Client.promptOpen = true;
-    const answer = (v)=>{ Client.promptOpen = false; sendToHost({t:'ans', id:msg.id, v}); };
+    const answer = (v)=>{ Client.promptOpen = false; Client.holdJolly = false; sendToHost({t:'ans', id:msg.id, v}); };
     const V = Client.V;
     const me = V.players[V.me];
     if(msg.kind==='c8') Modal.choice('Hai giocato un 8', 'Scegli il vincolo per la prossima carta giocata.',
@@ -5487,7 +5490,11 @@ async function playEvent(ev){
       const sel = mine ? (ev.zone==='hand' ? '#human-hand' : '#human-stacks') : '.opp-seat[data-pid="'+ev.pid+'"]';
       const flights = ev.cards.map((c,i)=>{
         const src = document.querySelector(sel+' [data-uid="'+c.uid+'"]');
-        const from = src ? src.getBoundingClientRect() : (miniCardRectNear(ev.pid) || toRect);
+        let from = src ? src.getBoundingClientRect() : (miniCardRectNear(ev.pid) || toRect);
+        if(src && mine && ev.zone==='hand'){      // a card of a long hand may sit out of sight: it takes off from the edge of the visible hand
+          const hr = document.getElementById('human-hand').getBoundingClientRect();
+          if(from.left<hr.left || from.left+from.width>hr.right){ from = {left:Math.max(hr.left, Math.min(hr.right-from.width, from.left)), top:from.top, width:from.width, height:from.height}; }
+        }
         if(i===0) dropEffectIcons(overlapDelay(from, toRect));
         if(src) src.style.visibility = 'hidden';
         return wait(i*70).then(()=>fly(cardHtml(c), from, toRect, {growTo:true, hold:true}));
@@ -5544,6 +5551,7 @@ async function playEvent(ev){
       dropEffectIcons(560 + overlapDelay(fromRect, toRect));
       await new Promise(res=>animateFlipThenFly(fromRect, toRect, ev.card, res, !mine, true));
       Fx._noPin = false;
+      if(mine && ev.card && ev.card.rank==='JOLLY') Client.holdJolly = true;     // the card stays on the table while its value is being chosen
       break;
     }
     case 'discard': {
@@ -5837,7 +5845,10 @@ function renderHumanStacks(){
   const act = Client.canAct();
   const canActFaceup = act && zone==='faceup';
   const canReveal = act && zone==='facedown';
-  p.slots.forEach((slot, idx)=>{
+  /* like in the hand, the 2s (and a jolly) go to the right */
+  const slotKey = i=>{ const u = p.slots[i].up; return !u ? 0 : u.rank==='JOLLY' ? 2 : u.rank==='2' ? 1 : 0; };
+  p.slots.map((s,i)=>i).sort((a,b)=>slotKey(a)-slotKey(b) || a-b).forEach(idx=>{
+    const slot = p.slots[idx];
     const stackEl = document.createElement('div');
     stackEl.className = 'stack-slot';
     stackEl.setAttribute('data-slot-idx', idx);
@@ -5879,6 +5890,7 @@ function renderHuman(){
   renderHumanStacks();
 
   const hd = document.getElementById('human-hand');
+  const prevScroll = hd.scrollLeft;      // a long hand stays where it was scrolled
   hd.innerHTML = '';
   const act = Client.canAct();
   const canActHand = act && zone==='hand';
@@ -5913,6 +5925,7 @@ function renderHuman(){
     if(fe){ fe.classList.add('fresh'); setTimeout(()=>{ try{ const hr = hd.getBoundingClientRect(), r = fe.getBoundingClientRect(); if(r.left<hr.left || r.right>hr.right) hd.scrollLeft += (r.left + r.width/2) - (hr.left + hr.width/2); }catch(e){} }, 30); }
   }
   hd.style.overflow = hd.scrollWidth > hd.clientWidth + 1 ? '' : 'visible';   // nothing to clip: don't cut shadows / raised cards
+  hd.scrollLeft = prevScroll;
   document.getElementById('hand-label').textContent = `la tua mano (${p.hand.length})`;
   placeSelectAll(canActHand ? selectAllInfo(V, p) : null);
   document.getElementById('game-screen').classList.toggle('auto-on', !!p.auto);
@@ -6118,6 +6131,7 @@ const Modal = {
   pickSuper(cards, onPick){
     const box = Modal.open(`<h3>Hai giocato un J</h3><p>Scegli una carta dall’ipersboboz da aggiungere alla tua mano.</p><div class="modal-card-row" id="jdraw-row">${cards.map(c=>cardHtml(c)).join('')}</div>`, 'modal-box-wide');
     const row = document.getElementById('jdraw-row');
+    fitCardRow(row);
     Array.from(row.children).forEach((el,i)=>{
       el.style.cursor = 'pointer';
       el.onclick = ()=>{
@@ -6134,7 +6148,7 @@ const Modal = {
   discard(hand, onPick){
     const box = Modal.open(`<h3>Hai giocato un 5</h3><p>Scarta una carta dalla mano nell’ipersboboz (esce definitivamente dal gioco).</p><div class="modal-card-row" id="discard-row">${hand.map(c=>cardHtml(c)).join('')}</div>`, 'modal-box-wide');
     const row = document.getElementById('discard-row');
-    { const n = hand.length, w = n<=8 ? 60 : n<=12 ? 52 : n<=18 ? 44 : 38; row.style.setProperty('--card-w', w+'px'); row.style.setProperty('--cw', w+'px'); row.style.setProperty('--card-h', (w*1.41).toFixed(1)+'px'); }
+    { const n = hand.length, w = n<=8 ? 60 : 52; row.style.setProperty('--card-w', w+'px'); row.style.setProperty('--cw', w+'px'); row.style.setProperty('--card-h', (w*1.41).toFixed(1)+'px'); fitCardRow(row); }
     Array.from(row.children).forEach((el,i)=>{
       el.style.cursor = 'pointer';
       el.onclick = ()=>{
@@ -6158,6 +6172,11 @@ const Modal = {
 /* The picked card flies out of the dialog to `toRect`; a copy of it stays
    there (held) until the host's answer redraws the table, so the card
    never disappears or shows what lies underneath. */
+/* many cards: the row scrolls instead of shrinking the cards; with few cards nothing clips the flight */
+function fitCardRow(row){
+  row.style.maxHeight = 'min(48vh, 360px)'; row.style.overflowY = 'auto'; row.style.overflowX = 'hidden';
+  if(row.scrollHeight <= row.clientHeight + 1){ row.style.maxHeight = ''; row.style.overflow = ''; }
+}
 function modalFlyOut(box, row, el, toRect, onDone){
   const {overlay} = Modal.el();
   const fromRect = el.getBoundingClientRect();
@@ -6169,15 +6188,30 @@ function modalFlyOut(box, row, el, toRect, onDone){
   overlay.style.transition = 'background .25s ease';
   overlay.style.background = 'rgba(0,0,0,0)';
   el.onclick = null;
-  el.style.position = 'relative'; el.style.zIndex = 5; el.style.cursor = 'default';
-  el.style.transformOrigin = 'center center';
   const dx = (toRect.left + toRect.width/2) - (fromRect.left + fromRect.width/2);
   const dy = (toRect.top + toRect.height/2) - (fromRect.top + fromRect.height/2);
   const sc = toRect.width / fromRect.width;
-  el.getBoundingClientRect();
-  el.style.transition = 'transform .5s cubic-bezier(.3,.7,.3,1)';
-  requestAnimationFrame(()=>{ el.style.transform = `translate(${dx}px, ${dy}px) scale(${sc})`; });
+  /* a long list scrolls inside its box: the card then flies as a copy, so the scrolling box never clips it */
+  let pre = null;
+  if(row.scrollHeight > row.clientHeight + 1){
+    pre = document.createElement('div'); pre.className = 'modal-card-row';
+    const cs = getComputedStyle(row);
+    ['--card-w','--card-h','--cw'].forEach(k=>pre.style.setProperty(k, cs.getPropertyValue(k)));
+    pre.style.cssText += `position:fixed;left:${fromRect.left}px;top:${fromRect.top}px;margin:0;pointer-events:none;transform-origin:center center;z-index:5;overflow:visible;max-height:none;`;
+    const cc = el.cloneNode(true); cc.style.cssText = ''; pre.appendChild(cc);
+    overlay.appendChild(pre); el.style.visibility = 'hidden';
+    pre.getBoundingClientRect();
+    pre.style.transition = 'transform .5s cubic-bezier(.3,.7,.3,1)';
+    requestAnimationFrame(()=>{ pre.style.transform = `translate(${dx}px, ${dy}px) scale(${sc})`; });
+  } else {
+    el.style.position = 'relative'; el.style.zIndex = 5; el.style.cursor = 'default';
+    el.style.transformOrigin = 'center center';
+    el.getBoundingClientRect();
+    el.style.transition = 'transform .5s cubic-bezier(.3,.7,.3,1)';
+    requestAnimationFrame(()=>{ el.style.transform = `translate(${dx}px, ${dy}px) scale(${sc})`; });
+  }
   setTimeout(()=>{
+    if(pre){ pre.style.transition = 'none'; document.getElementById('anim-layer').appendChild(pre); heldClones.push(pre); Modal.close(); onDone(); return; }
     const w = document.createElement('div');
     w.className = 'modal-card-row';
     w.style.cssText = `position:fixed;left:${fromRect.left}px;top:${fromRect.top}px;margin:0;pointer-events:none;transform-origin:center center;transform:translate(${dx}px,${dy}px) scale(${sc});`;
@@ -7104,6 +7138,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.4.6', d:'2026-11-03'},
   {v:'1.4.5', d:'2026-11-01'},
   {v:'1.4.4', d:'2026-11-01'},
   {v:'1.4.3', d:'2026-11-01'},
@@ -7942,7 +7977,7 @@ function showLog(){
     const pl = Client.partyLive, total = Party.gamesFor(_st, V.players.length);
     const done = (pl && pl.k<pl.total) ? pl.k : 0;
     const cr = {}; if(done) pl.crowns.forEach(c=>{ cr[c.name] = c.c; });
-    partyLive = `<h4>🎉 Party · partita ${done+1} di ${total}</h4><div class="live-stats">` + V.players.map(p=>`<div class="live-row${p.id===V.me?' you':''}"><span>${esc(p.name)}${nameTag(p)}</span><i>${cr[p.name]||0} 👑</i></div>`).join('') + `</div>`;
+    partyLive = `<h4>🎉 Party · partita ${done+1} di ${total}</h4><div class="live-stats">` + V.players.map(p=>`<div class="live-row${p.id===V.me?' you':''}"><span>${esc(p.name)}${nameTag(p)}</span><i><span class="crn">${cr[p.name]||0}</span> 👑</i></div>`).join('') + `</div>`;
   }
   const box = closableModal('Diario e statistiche', `
     <div class="deck-info">🎴 <b>${V.numDecks===1?'1 mazzo (52 carte)':'2 mazzi ('+(104+(V.hasJolly?1:0))+' carte'+(V.hasJolly?', con 1 Jolly':'')+')'}</b> · sboboz con <b>${V.sbobozThreshold}</b> carte uguali</div>
