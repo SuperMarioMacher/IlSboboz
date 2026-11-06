@@ -1769,6 +1769,7 @@ html.land .rp-btns{ margin:0; flex:0 0 auto; }
 html.land .rp-btns button{ width:34px; height:34px; } html.land .rp-btns button.main{ width:44px; }
 html.land .rp-viewer{ max-width:130px; height:30px; }
 @media (min-width:900px){ #replay-bar{ padding:10px max(24px, calc((100vw - 760px)/2)) 12px; } }
+#rp-marks i.pk{ background:#ff5a4d; }
 
 </style>
 </head>
@@ -1977,7 +1978,6 @@ html.land .rp-viewer{ max-width:130px; height:30px; }
   <div class="rp-top"><span id="rp-step">Mossa 0 / 0</span><span class="rp-speed"><button type="button" id="rp-slow" aria-label="Più lento">−</button><b id="rp-sp">1×</b><button type="button" id="rp-fast" aria-label="Più veloce">+</button></span><button type="button" id="rp-view" class="rp-viewer" aria-label="Punto di vista"></button></div>
   <div class="rp-slider"><div id="rp-marks"></div><input type="range" id="rp-range" min="0" max="0" value="0" aria-label="Posizione nella partita"></div>
   <div class="rp-btns">
-    <button type="button" id="rp-exit" class="rp-small" aria-label="Esci dal replay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     <button type="button" id="rp-start" aria-label="All'inizio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M19 5.5v13L9 12z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg></button>
     <button type="button" id="rp-prev" aria-label="Mossa precedente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5.5v13L7 12z" fill="currentColor"/></svg></button>
     <button type="button" id="rp-play" class="main" aria-label="Riproduci"></button>
@@ -2027,8 +2027,8 @@ html.land .rp-viewer{ max-width:130px; height:30px; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.5.0',   // mostrata in fondo alla home
-  buildTime: '2026-11-06T08:06',   // data e ora di creazione di questo file (per le novità)
+  version: '1.5.1',   // mostrata in fondo alla home
+  buildTime: '2026-11-06T09:01',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -3235,7 +3235,9 @@ function checkStalemate(){
 /* Only AI-controlled players are left in the game: simulate the rest
    instantly (no events) straight to the final ranking. */
 function skipToEnd(){
-  G.quiet = true;
+  /* the game is still written down step by step: the replay shows what was skipped */
+  const rec = !!(G.rec && G.rec.init);
+  G.quiet = !rec;
   let safety = 0;
   while(G.phase==='play' && safety<20000){
     safety++;
@@ -3243,8 +3245,10 @@ function skipToEnd(){
     if(p.finished){ nextTurn(); continue; }
     if(G.pending) resolvePendingByAI();
     else aiStep(()=>{});
+    if(rec){ try{ Rec.step(G.evq); }catch(e){} G.evq = []; }
     if(G.phase==='play' && checkStalemate()) break;
   }
+  if(rec){ try{ Rec.step(G.evq); }catch(e){} G.evq = []; }
   G.quiet = false;
   if(G.phase==='play') G.phase = 'stalemate';   // safety net: never leave the game hanging
 }
@@ -5775,7 +5779,9 @@ function renderOpponents(){
       container.appendChild(seat);
       continue;
     }
-    const stacksHtml = p.slots.map((slot, idx)=>{
+    const oKey = i=>{ const u = p.slots[i].up; return !u ? 0 : u.rank==='JOLLY' ? 2 : u.rank==='2' ? 1 : 0; };
+    const stacksHtml = p.slots.map((s,i)=>i).sort((a,b)=>oKey(a)-oKey(b) || a-b).map(idx=>{
+      const slot = p.slots[idx];
       if(slot.up){
         const underHtml = slot.down ? '<div class="card-back small stack-under"></div>' : '';
         const topHtml = cardHtml(slot.up,'small').replace('class="card', 'class="stack-top card');
@@ -6045,7 +6051,7 @@ function renderHuman(){
     setBtn(false);
     msg.textContent = 'Tocca le tue carte coperte per rivelarne una.';
   } else { setBtn(false); msg.textContent = ''; }
-  if(Client.replay){ setBtn(false); msg.textContent = 'Replay · punto di vista di ' + p.name; }
+  if(Client.replay){ setBtn(false); msg.textContent = ''; msg.style.display = 'none'; } else msg.style.display = '';
 }
 
 function renderStatusStrip(){
@@ -6742,7 +6748,7 @@ const Replay = {
     marks.innerHTML = '';
     rp.rec.st.forEach((s, k)=>{
       const evs = s.e || [];
-      const kind = evs.some(e=>e.t==='sboboz') ? 'sb' : evs.some(e=>e.t==='finish') ? 'fn' : '';
+      const kind = evs.some(e=>e.t==='sboboz') ? 'sb' : evs.some(e=>e.t==='finish') ? 'fn' : evs.some(e=>e.t==='pickup') ? 'pk' : '';
       if(!kind) return;
       const m = document.createElement('i');
       m.className = kind; m.style.left = ((k+1)/N*100) + '%';
@@ -6775,7 +6781,6 @@ const REP_ICON = {
 (function(){
   const $ = id=>document.getElementById(id);
   const on = (id, fn)=>{ const e = $(id); if(e) e.addEventListener('click', fn); };
-  on('rp-exit', ()=>Replay.close());
   on('rp-start', ()=>{ Replay.pause(); Replay.hard(0); });
   on('rp-end', ()=>{ Replay.pause(); if(Client.replay) Replay.hard(Client.replay.S.length-1); });
   on('rp-prev', ()=>{ if(!Client.replay) return; Replay.pause(); Replay.hard(Client.replay.idx-1); });
@@ -7573,6 +7578,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.5.1', d:'2026-11-06', title:'Sistemazioni replay', items:['Anche i bot mostrano i 2 e il jolly in fondo alle scoperte','Replay: tolto il tasto X e la scritta sotto le carte','Replay: segni rossi quando qualcuno pesca il tavolo','Replay: salta partita ora si può rivedere per intero']},
   {v:'1.5.0', major:true, d:'2026-11-06', title:'Replay delle partite', items:['Ogni partita viene registrata e si può rivedere','Slider, velocità e punto di vista di ogni giocatore']},
   {v:'1.4.6', d:'2026-11-03'},
   {v:'1.4.5', d:'2026-11-01'},
