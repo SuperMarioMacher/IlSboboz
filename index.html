@@ -1785,6 +1785,23 @@ html.replaying .human-footer, html.replaying #auto-bar{ display:none !important;
 html.replaying #human-area{ padding-bottom:8px !important; }
 html.replaying.land #game-screen #human-area{ padding-top:12px !important; padding-bottom:10px !important; justify-content:center !important; }
 html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
+/* 1.6.0 bot personalities */
+.s-info{ flex:0 0 auto; width:20px; height:20px; margin-left:6px; border-radius:50%; border:1px solid rgba(243,236,217,.4); background:none; color:rgba(243,236,217,.85); font:italic 700 .7rem Georgia,serif; cursor:pointer; padding:0; line-height:1; }
+.s-info:hover, .s-info:focus{ border-color:var(--gold-bright); color:var(--gold-bright); }
+.ab-list{ display:flex; flex-direction:column; gap:8px; max-height:min(56vh,420px); overflow-y:auto; margin:10px 0 12px; text-align:left; }
+.ab-row{ display:flex; align-items:flex-start; gap:10px; width:100%; padding:9px 10px; border-radius:12px; border:1px solid rgba(232,192,95,.25); background:rgba(0,0,0,.25); color:var(--cream); text-align:left; cursor:pointer; font-family:inherit; }
+.ab-row.sel{ border-color:var(--gold-bright); background:rgba(232,192,95,.12); }
+.ab-row .s-ava{ flex:0 0 auto; }
+.ab-t{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+.ab-t b{ font-size:.95rem; } .ab-t i{ font-style:normal; font-size:.78rem; color:var(--gold-bright); } .ab-t small{ font-size:.74rem; opacity:.75; line-height:1.3; }
+.bi-t{ display:block; font-size:.72em; font-weight:500; color:var(--gold-bright); margin-top:2px; }
+.bi-rel{ margin:8px 0 2px; font-size:.85rem; text-align:left; } .bi-rel ul{ margin:4px 0 4px 18px; padding:0; } .bi-rel span{ opacity:.65; font-size:.78rem; }
+.s-mood, .opp-mood{ flex:0 0 auto; width:22px; height:22px; margin-left:5px; padding:0; border:0; background:none; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; }
+.s-mood .mface, .opp-mood .mface{ width:20px; height:20px; transition:transform .15s; }
+.s-mood:active .mface, .opp-mood:active .mface{ transform:scale(1.15); }
+.opp-mood{ width:18px; height:18px; margin-left:4px; } .opp-mood .mface{ width:16px; height:16px; }
+.bi-mood{ display:flex; align-items:center; gap:10px; margin:8px 0 4px; padding:8px 10px; border-radius:12px; background:rgba(0,0,0,.28); border:1px solid rgba(232,192,95,.2); text-align:left; font-size:.88rem; }
+.bi-mood .mface{ width:38px; height:38px; display:block; } .bi-mood #bm-face{ flex:0 0 auto; display:inline-flex; }
 
 </style>
 </head>
@@ -2044,8 +2061,8 @@ html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.5.4',   // mostrata in fondo alla home
-  buildTime: '2026-11-06T09:54',   // data e ora di creazione di questo file (per le novità)
+  version: '1.6.0',   // mostrata in fondo alla home
+  buildTime: '2026-11-06T23:08',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -2158,7 +2175,7 @@ function newStats(){
 
 function newPlayer(id, m){
   return {
-    id, name:m.name, kind:m.kind, avatar:m.avatar||'🥷',
+    id, mid:m.mid, name:m.name, kind:m.kind, avatar:m.avatar||'🥷', autoBot:m.autoBot||'',
     elem:m.elem||null, color:m.color||null,
     hand:[], faceDown:[], slots:[], finished:false, connected:true, ready:false,
     known:new Set(),   // uids of cards in this hand that everybody has seen (picked-up table, returned queens)
@@ -2191,6 +2208,7 @@ function initGame(members, opts){
   G.startingTurn = G.turn;
   players.forEach(p=>{ p.st.maxHand = p.hand.length; });
   try{ if(typeof Rec!=='undefined') Rec.begin(); }catch(e){}
+  try{ if(typeof Bots!=='undefined') Bots.newGame(); }catch(e){}
   return G;
 }
 
@@ -2673,6 +2691,10 @@ function aiJackSetsUpSboboz(p){
    has dropped off) is answered immediately by the AI.
 ============================================================ */
 function aiAnswer(player, kind){
+  if(typeof Bots!=='undefined' && !player.legacy && (kind==='c8' || kind==='c9' || kind==='jpick')){
+    const r = Bots.answer(player, kind);
+    if(r!==undefined) return r;
+  }
   switch(kind){
     case 'c8': return aiChoose8Mode();
     case 'c9': return aiChoose9Mode();
@@ -2890,6 +2912,7 @@ function resolvePlay(player, cards, zone, afterAll){
     G.actor = player.id;
     checkAutoSboboz();
     if(zone==='hand') refillHand(player);
+    if(typeof Bots!=='undefined' && !G.sim) Bots.postMove(player);
     if(checkFinished(player)){
       G.extraTurn = false;
       if(G.phase!=='ended') nextTurn();
@@ -3021,7 +3044,7 @@ function processFacedownCard(player, card, afterAll){
 /* ============================================================
    AI TURN LOGIC
 ============================================================ */
-function aiPlayHand(p){
+function aiPlayHandOld(p){
   const groups = {};
   p.hand.forEach(c=>{ (groups[c.rank]=groups[c.rank]||[]).push(c); });
   const jollyCard = groups['JOLLY'] ? groups['JOLLY'][0] : null;
@@ -3108,7 +3131,7 @@ function aiPlayHand(p){
   return null;
 }
 
-function aiPlayFaceUp(p){
+function aiPlayFaceUpOld(p){
   const candidates = [];
   p.slots.forEach(s=>{
     if(!s.up) return;
@@ -3138,6 +3161,9 @@ function aiPlayFaceUp(p){
   return null;
 }
 
+function aiPlayHand(p){ return (typeof Bots!=='undefined' && !p.legacy && p.useHand!==false) ? Bots.playHand(p) : aiPlayHandOld(p); }
+function aiPlayFaceUp(p){ return (typeof Bots!=='undefined' && !p.legacy && p.useFace!==false) ? Bots.playFaceUp(p) : aiPlayFaceUpOld(p); }
+
 /* One complete AI action (play / pickup / reveal) for the current
    player. Calls afterAll once the engine state is consistent again. */
 function aiStep(afterAll){
@@ -3148,11 +3174,11 @@ function aiStep(afterAll){
   const zone = currentZone(p);
   if(zone==='hand'){
     const play = aiPlayHand(p);
-    if(play) resolvePlay(p, play, 'hand', afterAll);
+    if(play){ if(typeof Bots!=='undefined' && !G.sim) Bots.preMove(p); resolvePlay(p, play, 'hand', afterAll); }
     else { pickUpTable(p); afterAll(); }
   } else if(zone==='faceup'){
     const play = aiPlayFaceUp(p);
-    if(play) resolvePlay(p, play, 'faceup', afterAll);
+    if(play){ if(typeof Bots!=='undefined' && !G.sim) Bots.preMove(p); resolvePlay(p, play, 'faceup', afterAll); }
     else { pickUpTable(p); afterAll(); }
   } else if(zone==='facedown'){
     const idx = pickFacedownSlot(p);
@@ -3215,6 +3241,7 @@ function humanAction(pid, a){
     }
     jollies.forEach(j=>{ j.rank = rank; j.wasJolly = true; });
     G.actor = pid; p.st.turns++; G.turnsCount++;
+    if(typeof Bots!=='undefined') Bots.preMove(p);
     resolvePlay(p, cards, zone, Host.afterStep);
     return {ok:true};
   }
@@ -3300,6 +3327,7 @@ function viewFor(pid){
       id:p.id, name:p.name, kind:p.kind, avatar:p.avatar, elem:p.elem, color:p.color,
       connected:p.connected, finished:p.finished, ready:p.ready, auto:!!p.auto,
       place: G.finishOrder.indexOf(p)+1,
+      mood: (p.kind==='bot' && typeof Bots!=='undefined') ? Bots.moodOf(p, G.players[pid]) : 0,
       hand: mine ? p.hand.map(pub) : {length:p.hand.length},
       slots: p.slots.map(s=>({down: s.down ? {uid:s.down.uid, hidden:true} : null, up: s.up ? pub(s.up) : null})),
       st: p.st
@@ -3320,6 +3348,691 @@ function viewFor(pid){
 }
 
 /* ============================================================
+   BOTS: personalities, memory and relations
+   Every bot is a ninja with its own character. All of them share the same
+   way of thinking (see Bots.hand / Bots.faceup): each legal move gets a score
+   made of the same few ingredients, and the character only changes the
+   weights:
+     - how many cards the bot remembers (the cards already played / seen),
+     - how much it wants to hurt (or help) the next players,
+     - how much it likes to risk strange moves,
+     - how it behaves when the game risks ending in a stalemate,
+     - how it gets on with the other ninjas and with the people at the table.
+   Standing of a player: every card in hand = 1 point, every face-up card = 2,
+   every covered card = 3. Fewer points = ahead.
+============================================================ */
+const BOT_PERSONAS = {
+  Zane:{ key:'Zane', title:'Il calcolatore',
+    desc:'Un robot: ricorda esattamente tutte le carte già uscite e sa sempre la mossa giusta. Non fa regali, colpisce chi è davanti. In caso di stallo pur di non perdere accetta il pareggio.',
+    mem:1, perfect:true, calc:true, blunder:0, stale:'seek', rel:{Jay:1, Cole:1} },
+  Cole:{ key:'Cole', title:'Il generoso',
+    desc:'Non fa lo str…ino: se qualcuno è messo male lo aiuta e non lo affonda. Quando la partita rischia lo stallo cerca di evitarlo.',
+    mem:0.7, blunder:0.05, stale:'avoid', rel:{Jay:1, Zane:1} },
+  Jay:{ key:'Jay', title:'Il simpaticone',
+    desc:'Gioca per divertirsi e fare spettacolo: riporta in campo le carte dello sboboz con i 3, pesca carte strane con il J e ogni tanto fa mosse bizzarre (ma non quando sta perdendo troppo). Cerca di evitare lo stallo.',
+    mem:0.55, blunder:0.07, stale:'avoid', rel:{Nya:2, Cole:1, Kai:-1} },
+  Lloyd:{ key:'Lloyd', title:'Il normale',
+    desc:'Né troppo buono né troppo cattivo e niente di strano: ricorda molte carte, ma non tutte, e ogni tanto sbaglia (è umano). Cerca di evitare lo stallo.',
+    mem:0.75, blunder:0.06, stale:'avoid', rel:{} },
+  Nya:{ key:'Nya', title:'La competitiva',
+    desc:'Molto competitiva: quando sta vincendo è spietata con tutti pur di arrivare prima. Se invece sta perdendo diventa generosa con chi è messo male come lei. In caso di stallo pur di non perdere accetta il pareggio.',
+    mem:0.8, blunder:0.04, stale:'seek', rel:{Jay:2, Kai:1} },
+  Kai:{ key:'Kai', title:'Il focoso',
+    desc:'Finché vince o se la gioca è molto bravo e ricorda le carte. Se si accorge di stare perdendo si arrabbia: gioca peggio, dimentica le carte e diventa più cattivo. In caso di stallo pur di non perdere accetta il pareggio.',
+    mem:0.9, blunder:0.03, stale:'seek', rel:{Nya:1, Lloyd:1, Jay:-1} }
+};
+/* 5 faces: 2 happy ... -2 furious. The thresholds are low because every kind / unkind act moves the opinion a little. */
+function moodLevel(v){ return v>=0.8 ? 2 : v>=0.3 ? 1 : v<=-0.8 ? -2 : v<=-0.3 ? -1 : 0; }
+const BOT_FEM = {Nya:true};
+function moodText(name, v){
+  const f = !!BOT_FEM[name], L = moodLevel(v);
+  return [
+    `È furios${f?'a':'o'} con te: farà di tutto per metterti in difficoltà (sempre con misura).`,
+    `È un po’ arrabbiat${f?'a':'o'} con te: tenderà a ostacolarti.`,
+    `È neutrale nei tuoi confronti: né favori né rancori.`,
+    `È content${f?'a':'o'} di te: tenderà ad aiutarti un po’.`,
+    `Ti adora in questo momento: ti darà una mano.`
+  ][L+2];
+}
+const BOT_ORDER = ['Zane','Cole','Jay','Lloyd','Nya','Kai'];
+/* a seat played by the autopilot / by a bot that takes over: neutral character */
+const BOT_NEUTRAL = { key:'', title:'', desc:'', mem:0.75, blunder:0.06, stale:'avoid', rel:{} };
+
+const Bots = (function(){
+  /* tunable numbers (they were found by playing thousands of simulated games) */
+  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.55, samples:0, top:4, zthr:1.0};
+  const rv = r=>rankValue(r);
+  const clamp = (x,a,b)=>Math.max(a, Math.min(b, x));
+
+  /* ---------- who is who ---------- */
+  function personaOf(p){
+    if(!p) return BOT_NEUTRAL;
+    if(p.kind==='bot'){ const x = BOT_PERSONAS[p.name]; return x ? Object.assign({}, x) : BOT_NEUTRAL; }
+    // a person played by the autopilot (or a seat that was taken over): the style of the chosen ninja, but no friendships
+    const s = BOT_PERSONAS[p.autoBot];
+    return s ? Object.assign({}, s, {rel:{}, solo:true}) : Object.assign({}, BOT_NEUTRAL, {solo:true});
+  }
+  const statsOf = p=>{ if(!G.bstat) G.bstat = {}; return G.bstat[p.name] || (G.bstat[p.name] = {}); };
+  const count = (p, k)=>{ const s = statsOf(p); s[k] = (s[k]||0)+1; };
+
+  /* ---------- standing ---------- */
+  function points(q){
+    if(q.finished) return 0;
+    let n = q.hand.length;
+    q.slots.forEach(s=>{ if(s.up) n += 2; if(s.down) n += 3; });
+    return n;
+  }
+  /* >0 ahead of the others, <0 behind; about -1..1 (10 points of difference = 1) */
+  function advantage(q){
+    if(q.finished) return 1;
+    const o = G.players.filter(x=>x!==q && !x.finished);
+    if(!o.length) return 1;
+    const avg = o.reduce((a,x)=>a+points(x),0)/o.length;
+    return clamp((avg - points(q))/10, -1, 1);
+  }
+  function nextActive(from){
+    const n = G.players.length; let i = from.id;
+    for(let k=0;k<n;k++){ i = (i+1)%n; if(!G.players[i].finished) return G.players[i]; }
+    return from;
+  }
+
+  /* ---------- memory ---------- */
+  /* Cards that were seen and then disappeared from sight (sboboz piles, picked-up cards) are remembered
+     with a probability that goes down as there are more of them to remember. Zane forgets nothing.
+     The roll is made once per card, so a bot does not change its mind from one move to the next. */
+  function memQ(p, per, rage){
+    let q = per.mem;
+    if(per.key==='Kai') q = q*(1 - 0.65*rage);
+    return clamp(q, 0.05, 1);
+  }
+  function buildMind(p, per, rage){
+    const tot = {}; RANKS.forEach(r=>{ tot[r] = 4*G.numDecks; }); tot.JOLLY = G.hasJolly ? 1 : 0;
+    const seen = {}; const add = c=>{ const r = (c.wasJolly || c.rank==='JOLLY') ? 'JOLLY' : c.rank; seen[r] = (seen[r]||0)+1; };
+    if(!p.mind) p.mind = {rem:{}};
+    const rem = p.mind.rem;
+    p.hand.forEach(add); G.table.forEach(add);
+    G.players.forEach(o=>o.slots.forEach(s=>{ if(s.up) add(s.up); }));
+    const subject = [];
+    G.sboboz.forEach(c=>subject.push(c));
+    G.superSboboz.forEach(c=>{ if(c.hid===undefined || c.hid===null) subject.push(c); else if(c.hid===p.id) add(c); });
+    const knownHands = {};
+    G.players.forEach(o=>{ if(o===p) return; const k = o.hand.filter(c=>o.known.has(c.uid)); knownHands[o.id] = k; k.forEach(c=>subject.push(c)); });
+    const load = subject.length, qm = memQ(p, per, rage);
+    const keep = c=>{
+      if(per.perfect) return true;
+      let v = rem[c.uid];
+      if(v===undefined){ v = Math.random() < clamp(qm - 0.012*Math.max(0, load-8), 0.12, 1); rem[c.uid] = v; }
+      return v;
+    };
+    G.sboboz.forEach(c=>{ if(keep(c)) add(c); });
+    G.superSboboz.forEach(c=>{ if((c.hid===undefined || c.hid===null) && keep(c)) add(c); });
+    const known = {};
+    for(const id in knownHands){ known[id] = knownHands[id].filter(c=>{ const ok = keep(c); if(ok) add(c); return ok; }); }
+    const pool = {}; let U = 0;
+    for(const r in tot){ pool[r] = Math.max(0, tot[r] - (seen[r]||0)); U += pool[r]; }
+    return {pool, U, known};
+  }
+
+  /* ---------- context of a decision ---------- */
+  function ctxFor(p){
+    const per = personaOf(p), me = advantage(p);
+    let rage = 0;
+    if(per.key==='Kai'){
+      const d = Math.max(0, -me);
+      const st = statsOf(p); st.peak = Math.max(st.peak||0, d);
+      rage = clamp(0.65*d + 0.35*(st.peak||0), 0, 1);
+    }
+    const c = {p, per, me, rage, adv:{}, mind:null, t:null, spice:0};
+    G.players.forEach(q=>{ c.adv[q.id] = advantage(q); });
+    c.mind = buildMind(p, per, rage);
+    c.t = nextActive(p);
+    c.blunder = per.blunder + (per.key==='Kai' ? 0.30*rage : 0);
+    return c;
+  }
+
+  /* ---------- opinions inside a lobby ---------- */
+  const keyOf = q=> (q.mid!==undefined && q.mid!==null) ? 'm'+q.mid : 'n'+q.name;
+  function opinion(c, q){
+    if(c.per.solo) return 0;
+    try{ if(typeof R==='undefined' || !R || !R.botOpin) return 0; }catch(e){ return 0; }
+    const o = R.botOpin[keyOf(c.p)]; return o ? (o[keyOf(q)]||0) : 0;
+  }
+  function relation(c, q){
+    if(c.per.solo || q.kind!=='bot') return 0;
+    return c.per.rel[q.name] || 0;
+  }
+
+  /* how much the bot wants q to pick up the table: >0 hurt, <0 help (value of one card) */
+  function mu(c, q){
+    const per = c.per, k = per.key, aq = c.adv[q.id];
+    let m;
+    switch(k){
+      case 'Zane': m = P.zs*Math.max(0, aq + P.zoff); break;
+      case 'Cole': m = 0.30 - 1.5*Math.max(0, -aq - 0.12); break;
+      case 'Jay':  m = P.jMu - 0.7*Math.max(0, -aq - 0.30); break;
+      case 'Nya':
+        if(c.me > 0.15) m = P.mu0*1.9*(1 + 0.3*Math.max(0,aq));
+        else if(c.me < -0.15) m = (aq < -0.1) ? -0.15 - 1.0*Math.max(0, -aq-0.1) : P.mu0*1.1;
+        else m = P.mu0*1.15;
+        break;
+      case 'Kai': {
+        const r = c.rage;
+        m = (aq < -0.2 && r < 0.3) ? 0.2 : P.mu0*(1 + 1.4*r);
+        break; }
+      default: m = P.mu0;
+    }
+    m *= Math.max(0.15, 1 - P.chainDamp*(G.pickChain||0));
+    m -= 0.18*relation(c, q);
+    m -= 0.16*opinion(c, q);
+    return m;
+  }
+
+  /* ---------- how likely is q to be unable to answer? ---------- */
+  function fakeState(rank, constraint){
+    return {table:[{rank, uid:'z'}], constraint:constraint||null, sboboz:G.sboboz, superSboboz:G.superSboboz, sbobozThreshold:G.sbobozThreshold};
+  }
+  /* pred(rank) -> can a card of this rank be played on the table described by S */
+  function predOf(S, q){
+    const zone = q.hand.length>0 ? 'hand' : 'faceup';
+    return rank=>isLegalRank(S, rank, zone, {p:q, n:1, uid:undefined, future:true});
+  }
+  /* probability that q (next to move) has nothing to answer with + the rank q will probably answer with */
+  function noAnswer(c, q, pred){
+    const hasHand = q.hand.length>0;
+    let kn, u;
+    if(hasHand){ kn = c.mind.known[q.id] || []; u = q.hand.length - kn.length; }
+    else {
+      kn = q.slots.filter(s=>s.up).map(s=>s.up);
+      u = kn.length ? 0 : (q.slots.some(s=>s.down) ? 1 : 0);
+      if(!kn.length && !u) return {p:0, ans:null};
+    }
+    let low = null;
+    for(const x of kn){ const r = x.rank==='JOLLY' ? '2' : x.rank; if(pred(r)){ if(!low || rv(r)<rv(low)) low = r; } }
+    if(low) return {p:0, ans:low};
+    if(u<=0) return {p:1, ans:null};
+    let a = 0;
+    for(const r in c.mind.pool){ if(c.mind.pool[r]>0 && (r==='JOLLY' || pred(r))) a += c.mind.pool[r]; }
+    const U = c.mind.U;
+    if(U<=0) return {p:0.3, ans:null};
+    let pn = 1;
+    for(let i=0;i<u;i++){ pn *= Math.max(0, 1 - a/Math.max(1, U-i)); }
+    return {p:pn, ans:null};
+  }
+  /* expected answer of an unknown hand when it can answer: just above what it has to beat */
+  function guessAns(S){
+    const top = S.table[0].rank; if(S.constraint) return '8';
+    const need = top==='2' ? 3 : rv(top);
+    return RANKS.find(r=>rv(r)>=Math.min(14, need+1)) || 'A';
+  }
+
+  /* value (in cards) of leaving the table in the state `st` = {m, rank, constraint} for the player after me */
+  function hurtValue(c, st){
+    if(!st || st.m<=0) return 0;
+    const p = c.p, t = c.t;
+    if(t===p) return 0;
+    const S = fakeState(st.rank, st.constraint), pr = predOf(S, t);
+    const A = noAnswer(c, t, pr);
+    let v = mu(c, t)*A.p*st.m;
+    // the player after the next one: it faces what the next one will probably play
+    const t2 = nextActive(t);
+    if(A.p<1 && t2!==t){
+      const ar = A.ans || guessAns(S);
+      const S2 = fakeState(ar, null), B = noAnswer(c, t2, predOf(S2, t2));
+      const w2 = (t2===p) ? -P.mu0*0.6 : mu(c, t2);
+      v += w2*B.p*(st.m+1)*(1-A.p)*0.55;
+    }
+    return v;
+  }
+
+  /* what the table looks like after playing cand (rank r, n cards): {m, rank, constraint|modes, sb} */
+  function after(p, cand){
+    const r = cand.r, n = cand.n, top = topOfTable(G);
+    const cur = (top && top.rank===r) ? currentTopStreak(G) : 0;
+    const sb = (r==='K') || cur+n >= G.sbobozThreshold;
+    if(sb) return {sb:true, m:0};
+    let m = G.table.length + n;
+    if(r==='3' && G.sboboz.length>0 && !G.suppressNext) m += G.sboboz.length;
+    return {sb:false, m, rank:r};
+  }
+  /* best value over the choices the player makes after the card (8 / 9 modes) */
+  function moveHurt(c, cand){
+    const a = after(c.p, cand);
+    if(a.sb) return {v:0, a};
+    if(G.suppressNext && (cand.r==='8' || cand.r==='9')) return {v:hurtValue(c, {m:a.m, rank:cand.r, constraint:null}), a};
+    if(cand.r==='8'){
+      const hi = hurtValue(c, {m:a.m, rank:'8', constraint:{type:'8', mode:'higher'}}), lo = hurtValue(c, {m:a.m, rank:'8', constraint:{type:'8', mode:'lower'}});
+      return {v:Math.max(hi, lo), a};
+    }
+    if(cand.r==='9'){
+      const e = hurtValue(c, {m:a.m, rank:'9', constraint:{type:'9', mode:'effect'}}), n = hurtValue(c, {m:a.m, rank:'9', constraint:{type:'9', mode:'noeffect'}});
+      return {v:Math.max(e, n), a};
+    }
+    return {v:hurtValue(c, {m:a.m, rank:cand.r, constraint:null}), a};
+  }
+
+  /* ---------- card values ---------- */
+  function cardCost(r){
+    if(r==='JOLLY') return P.cj;
+    if(r==='2') return P.c2;
+    if(r==='K') return P.ck;
+    return P.cmax*Math.pow(Math.max(0, rv(r)-3)/11, P.cexp);
+  }
+
+  /* ---------- candidates ---------- */
+  function handCands(p){
+    const groups = {}; p.hand.forEach(c=>{ (groups[c.rank]=groups[c.rank]||[]).push(c); });
+    const jolly = groups.JOLLY ? groups.JOLLY[0] : null, out = [];
+    for(const r in groups){
+      if(r==='JOLLY') continue;
+      for(let n=1;n<=groups[r].length;n++){
+        if(P.maxGroup && n<groups[r].length && r!=='2' && isLegalRank(G, r, 'hand', {p, n:groups[r].length})) continue;
+        if(isLegalRank(G, r, 'hand', {p, n})) out.push({zone:'hand', r, cards:groups[r].slice(0,n), n, jolly:false});
+        if(jolly && r!=='2' && isLegalRank(G, r, 'hand', {p, n:n+1})){
+          const top = topOfTable(G), cur = (top && top.rank===r) ? currentTopStreak(G) : 0;
+          if(cur+n < G.sbobozThreshold && cur+n+1 >= G.sbobozThreshold || p.hand.length===n+1) out.push({zone:'hand', r, cards:groups[r].slice(0,n), n:n+1, jolly:true});
+        }
+      }
+    }
+    if(jolly){
+      const legal = RANKS.filter(r=>isLegalRank(G, r, 'hand', {p, n:1}));
+      const pick = []; if(legal.includes('K')) pick.push('K'); if(legal.includes('A')) pick.push('A');
+      const low = legal.filter(r=>r!=='2').sort((a,b)=>rv(a)-rv(b))[0]; if(low && !pick.includes(low)) pick.push(low);
+      pick.forEach(r=>out.push({zone:'hand', r, cards:[], n:1, jolly:true, only:true}));
+    }
+    return out;
+  }
+  function faceCands(p){
+    const out = [];
+    p.slots.forEach(s=>{
+      if(!s.up) return;
+      if(s.up.rank==='JOLLY'){ out.push({zone:'faceup', r:'JOLLY', cards:[s.up], n:1, jolly:true, fj:true, down:!!s.down}); return; }
+      if(isLegalRank(G, s.up.rank, 'faceup', {p, n:1, uid:s.up.uid})) out.push({zone:'faceup', r:s.up.rank, cards:[s.up], n:1, jolly:false, down:!!s.down});
+    });
+    return out;
+  }
+  const keyOfCand = k=>k.zone+k.r+'x'+k.n+(k.jolly?'j':'')+(k.only?'o':'')+(k.fj?'f':'');
+
+  /* ---------- the common score ---------- */
+  function baseScore(c, k){
+    const p = c.p, hand = p.hand.length, pileLeft = G.drawPile.length;
+    let s = 0;
+    // cards that leave: while the pile lasts the hand is refilled, so shedding is worth less
+    const shedRate = (k.zone==='hand' && pileLeft >= k.n) ? P.shedEarly : P.shedLate;
+    let shed = k.n;
+    if(k.r==='5' && k.zone==='hand' && hand-k.n>0) shed += 1;      // the 5 also throws a card away
+    s += shedRate*shed;
+    // what the cards were worth to keep
+    if(k.only){ s -= cardCost('JOLLY'); }
+    else if(k.fj){ s -= cardCost('JOLLY')*0.5; }
+    else {
+      k.cards.forEach(x=>{ s -= cardCost(x.rank); });
+      if(k.jolly && !k.only) s -= cardCost('JOLLY');
+    }
+    return s;
+  }
+  function extraScore(c, k, mh){
+    const p = c.p;
+    let s = 0;
+    const a = mh.a;
+    if(a.sb){
+      s += P.sbBonus + 0.08*Math.min(G.table.length, 10) + 0.25*k.n;     // table cleared, one more move
+      if(k.r==='K' && k.n===1 && G.table.length<=1) s -= 0.5;        // a K wasted on an empty table
+    }
+    if(k.zone==='faceup'){
+      if(k.r==='4' && k.down) s += 0.55;                              // the covered card turns face-up
+    }
+    if(k.r==='J' && k.zone==='hand'){
+      s -= 0.9*0 + (G.superSboboz.length ? 0 : 1.2);                   // J with an empty ipersboboz does nothing
+      if(G.superSboboz.length && aiJackSetsUpSboboz(p)) s += 1.5;
+      if(G.superSboboz.length && !G.superSboboz.some(x=>x.rank!=='J')) s -= 1.5;
+      s -= shedPenaltyJ(k);                                          // the J brings a card back
+    }
+    if(k.r==='5' && k.zone==='hand'){
+      const hard = p.hand.filter(x=>x.rank==='3' || x.rank==='4').length;
+      if(hard>0) s += 0.25;
+    }
+    if(k.r==='3' && G.sboboz.length>0){ s -= 0.2; }                    // brings the burned cards back: risky for everybody
+    if(k.zone==='hand' && p.hand.length===k.n && !a.sb){ s += 0.4; }  // hand empty: the face-up cards come next
+    return s;
+  }
+  const shedPenaltyJ = k=> (k.n*0.4);                                  // the card taken from the ipersboboz replaces the J
+
+  /* ---------- persona terms ---------- */
+  function spiceScore(c, k, mh){
+    const per = c.per, p = c.p;
+    if(per.key!=='Jay') return 0;
+    if(c.me < -0.35) return 0;                    // no jokes while losing badly
+    let s = 0;
+    if(k.r==='3' && G.sboboz.length>=2 && k.zone==='hand'){ s += P.j3*(0.9 + 0.12*Math.min(G.sboboz.length,8)); }
+    const hasThree = p.hand.some(x=>x.rank==='3');
+    if(mh.a.sb && G.sboboz.length>=2 && hasThree && k.r!=='3'){ s -= 0.9*P.j3; }     // a new sboboz would bury the old pile: use the 3 first
+    if(k.r==='J' && G.superSboboz.some(x=>x.rank==='3' && !x.wasJolly)) s += 0.9*P.j3;  // to fish a 3
+    if(c.spice){                                  // today's mischief
+      if(c.spice==='high' && !mh.a.sb && rv(k.r)>=12 && k.n===1) s += 1.4;
+      if(c.spice==='k' && k.r==='K' && G.table.length<=2) s += 1.6;
+      if(c.spice==='five' && (k.r==='5' || k.r==='J' || k.r==='7')) s += 1.2;
+    }
+    return s;
+  }
+  function drawSpice(c){
+    if(c.per.key!=='Jay' || c.me < -0.3) return;
+    if(c.p.hand.length<=2) return;
+    if(Math.random() < P.jSpice){ c.spice = ['high','k','five'][Math.floor(Math.random()*3)]; count(c.p,'spice'); }
+  }
+
+  /* repeated positions: look at the position that would result from a move */
+  function cloneGame(){
+    const memo = new Map();
+    const dc = o=>{
+      if(o===null || typeof o!=='object') return o;
+      if(memo.has(o)) return memo.get(o);
+      let x;
+      if(Array.isArray(o)){ x = []; memo.set(o,x); for(let i=0;i<o.length;i++) x.push(dc(o[i])); return x; }
+      if(o instanceof Set){ x = new Set(o); memo.set(o,x); return x; }
+      x = {}; memo.set(o,x); for(const k in o) x[k] = dc(o[k]); return x;
+    };
+    const SKIP = {log:1, sigLog:1, stateCounts:1, evq:1, pending:1, pendingCb:1, rec:1, bstat:1};
+    const g = {}; for(const k in G){ if(!SKIP[k]) g[k] = dc(G[k]); }
+    g.log = []; g.sigLog = []; g.evq = []; g.pending = null; g.pendingCb = null; g.quiet = true; g.sim = true;
+    g.stateCounts = Object.assign({}, G.stateCounts); g.bstat = {};
+    g.players.forEach(x=>{ x.kind = 'bot'; x.connected = true; x.auto = false; x.persona = null; });
+    return g;
+  }
+  function resultingSig(p, k){
+    const real = G; let sig = null;
+    try{
+      const g = cloneGame(); G = g;
+      const me = g.players[p.id];
+      let cards;
+      if(k.zone==='faceup'){ const sl = me.slots.find(s=>s.up && s.up.uid===k.cards[0].uid); if(!sl) return null; cards = [sl.up]; if(k.fj){ cards[0].rank = aiResolveJollyRank('faceup', me, cards[0].uid); cards[0].wasJolly = true; } }
+      else {
+        cards = k.cards.map(x=>me.hand.find(y=>y.uid===x.uid));
+        if(k.jolly){ const j = me.hand.find(y=>y.rank==='JOLLY'); j.rank = k.r; j.wasJolly = true; cards.push(j); }
+      }
+      resolvePlay(me, cards, k.zone, ()=>{});
+      sig = stateSignature();
+      sig = {s:sig, n:(real.stateCounts[sig]||0)};
+    }catch(e){ sig = null; }
+    finally { G = real; }
+    return sig;
+  }
+
+  /* ---------- thinking ahead (the calculator only) ----------
+     Zane imagines the rest of the game: he guesses the cards he cannot know (shuffling them among the hidden places),
+     plays each of the best candidate moves and finishes the game with the usual play, many times; he picks the move
+     that turns out best on average. Hidden cards are only moved among hidden places: he never peeks. */
+  function determinize(g, pid){
+    const pool = [], put = [];
+    g.drawPile.forEach((c,i)=>{ pool.push(c); put.push(x=>{ g.drawPile[i] = x; }); });
+    g.players.forEach(o=>{
+      o.slots.forEach(sl=>{ if(sl.down){ pool.push(sl.down); put.push(x=>{ sl.down = x; }); } });
+      if(o.id!==pid) o.hand.forEach((c,i)=>{ if(!o.known.has(c.uid)){ pool.push(c); put.push(x=>{ o.hand[i] = x; }); } });
+    });
+    g.superSboboz.forEach((c,i)=>{ if(c.hid!==undefined && c.hid!==null && c.hid!==pid){ const hid = c.hid; pool.push(c); put.push(x=>{ g.superSboboz[i] = x; x.hid = hid; }); } });
+    for(let i=pool.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    pool.forEach(c=>{ if(c.hid!==undefined) delete c.hid; });
+    put.forEach((f,i)=>f(pool[i]));
+  }
+  function applyCand(g, k){
+    const me = g.players[g.turn];
+    let cards;
+    if(k.zone==='faceup'){ const sl = me.slots.find(s=>s.up && s.up.uid===k.cards[0].uid); if(!sl) return false; cards = [sl.up]; if(k.fj){ cards[0].rank = aiResolveJollyRank('faceup', me, cards[0].uid); cards[0].wasJolly = true; } }
+    else {
+      cards = k.cards.map(x=>me.hand.find(y=>y.uid===x.uid));
+      if(k.jolly){ const j = me.hand.find(y=>y.rank==='JOLLY'); j.rank = k.r; j.wasJolly = true; cards.push(j); }
+    }
+    if(cards.some(x=>!x)) return false;
+    resolvePlay(me, cards, k.zone, ()=>{});
+    return true;
+  }
+  function rollValue(g, pid){
+    const n = g.players.length, root = g.players[pid], idx = g.finishOrder.indexOf(root);
+    const stale = g.phase!=='ended' && g.finishOrder.length < n-1;
+    let place = idx>=0 ? idx+1 : g.finishOrder.length+1, eff = place;
+    if(idx<0) eff = (place+n)/2;
+    return (idx===0 ? 1 : 0) + 0.3*(n-eff)/Math.max(1,n-1) - (stale ? 0.25 : 0);
+  }
+  function lookAhead(c, cands){
+    const p = c.p, real = G, K = P.samples, vals = cands.map(()=>[]);
+    try{
+      for(let s=0;s<K;s++){
+        const base = cloneGame(); G = base; determinize(base, p.id); G = real;
+        for(let i=0;i<cands.length;i++){
+          const R = cloneGameOf(base); G = R;
+          R.players.forEach(q=>{ q.legacy = true; });
+          if(!applyCand(R, cands[i])){ G = real; vals[i].push(-1); continue; }
+          let steps = 0; const cap = 100*R.players.length;
+          while(R.phase==='play' && steps<cap && !R.players[p.id].finished){
+            steps++; const q = R.players[R.turn];
+            if(q.finished){ nextTurn(); continue; }
+            if(R.pending) resolvePendingByAI(); else aiStep(()=>{});
+            if(R.phase==='play' && checkStalemate()) break;
+          }
+          vals[i].push(rollValue(R, p.id));
+          G = real;
+        }
+      }
+    } finally { G = real; }
+    return vals;
+  }
+  function cloneGameOf(src){
+    const save = G; G = src; let g;
+    try{ g = cloneGame(); } finally { G = save; }
+    g.stateCounts = Object.assign({}, src.stateCounts);
+    return g;
+  }
+
+  /* the plain heuristic of the game picks a move too: it is the starting point, a character changes it only when it has a reason */
+  function oldChoice(p, zone){
+    const cards = (zone==='hand' ? aiPlayHandOld(p) : aiPlayFaceUpOld(p));
+    if(!cards) return null;
+    const jolly = cards.some(x=>x.wasJolly) && zone==='hand';
+    const only = jolly && cards.length===1;
+    const fj = zone==='faceup' && cards[0].rank!=='JOLLY' && cards[0].wasJolly;
+    const k = {zone, r:cards[0].rank, cards:cards.filter(x=>!x.wasJolly && x.rank!=='JOLLY'), n:cards.length, jolly:jolly||fj, only:only};
+    if(zone==='faceup'){ k.cards = [cards[0]]; k.down = false; const sl = p.slots.find(x=>x.up && x.up.uid===cards[0].uid); k.down = !!(sl && sl.down); if(fj) k.fj = true; }
+    cards.forEach(x=>{ if(x.wasJolly){ resetIfJolly(x); } });
+    return k;
+  }
+  const sameMove = (a,b)=> a && b && a.zone===b.zone && a.r===b.r && a.n===b.n && !!a.jolly===!!b.jolly && !!a.only===!!b.only;
+  function devPenalty(c, k, old){
+    if(!old || sameMove(k, old)) return 0;
+    const dr = Math.abs((k.r==='JOLLY' ? 15 : rv(k.r)) - (old.r==='JOLLY' ? 15 : rv(old.r)));
+    return -(P.dev + P.devRank*dr + P.devCost*Math.max(0, cardCost(k.r) - cardCost(old.r)));
+  }
+
+  /* ---------- the choice ---------- */
+  function choose(c, list, scoreFn){
+    const sc = list.map(k=>({k, s:scoreFn(k) + (Math.random()-0.5)*2*P.noise}));
+    sc.sort((a,b)=>b.s-a.s);
+    let pick = sc[0];
+    if(sc.length>1 && Math.random() < c.blunder){
+      // a human slip: one of the next best moves (never one that is much worse)
+      const alt = sc.slice(1, 4).filter(x=>x.s > sc[0].s - 1.6);
+      if(alt.length){ pick = alt[Math.floor(Math.random()*alt.length)]; count(c.p,'blunder'); }
+    }
+    return pick;
+  }
+  function stalemateTerm(c, list, base){
+    // returns a function(k)->bonus. Only looks when the position has already come up twice.
+    const cur = G.stateCounts[stateSignature()] || 0;
+    if(cur<2) return null;
+    const per = c.per;
+    const losing = c.me <= 0.1;
+    const want = per.stale==='seek' ? (losing ? 1 : -1) : -1;     // +1: go for the stalemate, -1: avoid it
+    const cache = {};
+    list.forEach(k=>{ cache[keyOfCand(k)] = resultingSig(c.p, k); });
+    count(c.p, want>0 ? 'staleSeek' : 'staleAvoid');
+    return k=>{
+      const r = cache[keyOfCand(k)]; if(!r) return 0;
+      const rep = r.n;                      // how many times the resulting position has already come up
+      if(want>0) return rep>=2 ? 6 : (rep===1 ? 0.6 : 0);
+      return rep>=2 ? -9 : (rep===1 ? -1.2 : 0);
+    };
+  }
+
+  /* Zane: the scored moves are the candidates; the future decides between the best few */
+  function searchPick(c, list, scoreFn){
+    const sc = list.map(k=>({k, s:scoreFn(k)})).sort((a,b)=>b.s-a.s);
+    const top = sc.slice(0, P.top);
+    if(top.length<2) return top[0];
+    const vals = lookAhead(c, top.map(x=>x.k));
+    const mean = a=>a.reduce((x,y)=>x+y,0)/Math.max(1,a.length);
+    let bi = 0, best = 0;
+    for(let i=1;i<vals.length;i++){
+      const d = vals[i].map((v,j)=>v-vals[0][j]), m = mean(d);
+      let se = 0.5;
+      if(d.length>1){ const v2 = d.reduce((x,y)=>x+(y-m)*(y-m),0)/(d.length-1); se = Math.sqrt(v2/d.length); }
+      if(m>best && m>P.zthr*se){ best = m; bi = i; }
+    }
+    count(c.p, bi===0 ? 'searchSame' : 'searchChange');
+    return top[bi];
+  }
+  function playHand(p){
+    const c = ctxFor(p);
+    drawSpice(c);
+    const old = oldChoice(p, 'hand');
+    const list = handCands(p);
+    if(old && !list.some(k=>sameMove(k, old))) list.push(old);
+    if(!list.length) return null;
+    const sT = stalemateTerm(c, list);
+    const scoreFn = k=>{
+      const mh = moveHurt(c, k);
+      let s = devPenalty(c, k, old) + P.xs*extraScore(c, k, mh) + mh.v + spiceScore(c, k, mh);
+      if(sT) s += sT(k);
+      if(k.n===p.hand.length && !mh.a.sb && p.slots.every(x=>!x.up && !x.down)) s += 20;     // it wins the game
+      return s;
+    };
+    let pick = null;
+    if(c.per.calc && P.samples>0 && list.length>1) pick = searchPick(c, list, scoreFn);
+    if(!pick) pick = choose(c, list, scoreFn);
+    if(!pick) return null;
+    const k = pick.k;
+    if(G.table.length>0 && pick.s < -1.5){ /* a very bad move: better take the table? (only when no good play) */ }
+    const cards = k.cards.slice();
+    if(k.jolly){ const j = p.hand.find(x=>x.rank==='JOLLY'); j.rank = k.r; j.wasJolly = true; cards.push(j); }
+    return cards;
+  }
+  function playFaceUp(p){
+    const c = ctxFor(p);
+    drawSpice(c);
+    const old = oldChoice(p, 'faceup');
+    const list = faceCands(p);
+    if(old && !list.some(k=>sameMove(k, old))) list.push(old);
+    if(!list.length) return null;
+    const sT = stalemateTerm(c, list);
+    const pick = choose(c, list, k=>{
+      if(k.fj && !(old && sameMove(k, old))) return -3;                    // a jolly from the face-up row: last resort
+      const mh = moveHurt(c, k);
+      let s = devPenalty(c, k, old) + P.xs*extraScore(c, k, mh) + mh.v + spiceScore(c, k, mh);
+      if(sT) s += sT(k);
+      return s;
+    });
+    if(!pick) return null;
+    const k = pick.k;
+    if(k.fj){ const u = k.cards[0]; u.rank = aiResolveJollyRank('faceup', p, u.uid); u.wasJolly = true; }
+    return [k.cards[0]];
+  }
+
+  /* ---------- the questions asked to a bot ---------- */
+  function answer(p, kind){
+    if(G.sim && kind!=='c8' && kind!=='c9') return undefined;   // inside a simulation only the 8 / 9 choices are mirrored
+    const c = ctxFor(p);
+    switch(kind){
+      case 'c8': case 'c9': {
+        const a = kind==='c8' ? 'higher' : 'effect', b = kind==='c8' ? 'lower' : 'noeffect', type = kind==='c8' ? '8' : '9';
+        const m = G.table.length, rank = kind==='c8' ? '8' : '9';
+        const va = hurtValue(c, {m, rank, constraint:{type, mode:a}}), vb = hurtValue(c, {m, rank, constraint:{type, mode:b}});
+        let ch = va>vb ? a : b;
+        if(Math.abs(va-vb)<0.05) ch = G.sim ? a : ((Math.random()<0.5) ? a : b);
+        if(!G.sim && Math.random() < c.blunder*0.7){ ch = (ch===a) ? b : a; count(p,'blunder'); }
+        return ch;
+      }
+      case 'jpick': {
+        if(c.per.key==='Jay' && c.me >= -0.35 && P.jJ){
+          const three = G.superSboboz.find(x=>x.rank==='3' && !x.wasJolly);
+          const best = aiChooseSuperCard(p);
+          const completes = best && best.rank!=='JOLLY' && !best.wasJolly && sbobozGap(p.hand, best.rank, 1).withJolly<=0;
+          if(three && !completes && !G.superSboboz.some(x=>x.rank==='JOLLY' || x.wasJolly) && Math.random() < P.jJp){ count(p,'spiceJ'); return three.uid; }
+        }
+        return undefined;
+      }
+    }
+    return undefined;
+  }
+
+  /* ---------- opinions: who is kind and who is not ---------- */
+  /* Before a move: remember the pain every option would cause to the next player (truth). After the move: compare. */
+  function truthPain(actor, k, t){
+    const a = after(actor, k);
+    if(a.sb) return [0];
+    const mk = (rank, cons)=>{ const S = fakeState(rank, cons), z = t.hand.length>0 ? 'hand' : 'faceup';
+      const pr = predOf(S, t);
+      if(z==='hand') return t.hand.some(x=>pr(x.rank==='JOLLY' ? '2' : x.rank)) ? 0 : 1;
+      const ups = t.slots.filter(s=>s.up);
+      if(ups.length) return ups.some(s=>pr(s.up.rank==='JOLLY' ? '2' : s.up.rank)) ? 0 : 1;
+      return 0.5;
+    };
+    if(k.r==='8') return [mk('8',{type:'8',mode:'higher'}), mk('8',{type:'8',mode:'lower'})];
+    if(k.r==='9') return [mk('9',{type:'9',mode:'effect'}), mk('9',{type:'9',mode:'noeffect'})];
+    return [mk(k.r, null)];
+  }
+  function preMove(actor){
+    G.moveInfo = null;
+    try{
+      if(typeof R==='undefined' || !R || !R.botOpin) return;
+      const t = nextActive(actor);
+      if(t===actor || t.kind!=='bot') return;
+      const list = actor.hand.length>0 ? handCands(actor) : faceCands(actor);
+      if(list.length<2 || G.table.length<3) return;
+      let mx = 0, mn = 1;
+      list.forEach(k=>{ truthPain(actor, k, t).forEach(v=>{ mx = Math.max(mx, v); mn = Math.min(mn, v); }); });
+      G.moveInfo = {a:actor.id, t:t.id, mx, mn, m:G.table.length};
+    }catch(e){ G.moveInfo = null; }
+  }
+  function postMove(actor){
+    const mi = G.moveInfo; G.moveInfo = null;
+    if(!mi || mi.a!==actor.id) return;
+    try{
+      const t = G.players[mi.t];
+      if(t.finished || typeof R==='undefined' || !R || !R.botOpin) return;
+      const painted = G.table.length>0 && (function(){
+        // did the target end up with something to answer with?
+        const top = topOfTable(G), S = {table:[{rank:top.rank}], constraint:G.constraint, sboboz:G.sboboz, superSboboz:G.superSboboz, sbobozThreshold:G.sbobozThreshold};
+        const pr = predOf(S, t);
+        return !t.hand.some(x=>pr(x.rank==='JOLLY' ? '2' : x.rank)) && (t.hand.length>0 || !t.slots.some(s=>s.up && pr(s.up.rank==='JOLLY' ? '2' : s.up.rank)));
+      })();
+      const pain = painted ? 1 : 0;
+      let d = 0;
+      if(mi.mx-pain>=0.6) d = 0.22;            // it could have hurt me and did not
+      else if(pain-mi.mn>=0.6) d = -0.34;      // it could have spared me and did not
+      if(!d) return;
+      const w = (actor.kind==='bot') ? 0.5 : 1;
+      const o = R.botOpin[keyOf(t)] || (R.botOpin[keyOf(t)] = {});
+      const kk = keyOf(actor);
+      o[kk] = clamp((o[kk]||0) + d*w, -2, 2);
+    }catch(e){}
+  }
+  function newGame(){
+    try{
+      if(typeof R==='undefined' || !R) return;
+      if(!R.botOpin) R.botOpin = {};
+      for(const a in R.botOpin){ const o = R.botOpin[a]; for(const b in o){ o[b] *= 0.6; if(Math.abs(o[b])<0.03) delete o[b]; } }
+    }catch(e){}
+  }
+
+  /* how a bot feels about a person at the table: the opinion built from how kind that person has been to it */
+  function moodOf(bot, target){
+    try{
+      if(!bot || !target || bot.kind!=='bot' || typeof R==='undefined' || !R || !R.botOpin) return 0;
+      const o = R.botOpin[keyOf(bot)]; const v = o ? (o[keyOf(target)]||0) : 0;
+      return Math.round(v*100)/100;
+    }catch(e){ return 0; }
+  }
+  return {moodOf, P, playHand, playFaceUp, answer, personaOf, points, advantage, preMove, postMove, newGame, ctxFor, mu, statsOf};
+})();
+
+/* ============================================================
    PROFILE + STATISTICS (kept in this device's browser storage)
    Every device records its own results, whether it hosted the game
    or just joined it -- so whoever opens the file later still finds
@@ -3334,13 +4047,14 @@ const ST_KEYS = ['played','pickups','taken','sboboz','sbobozCards','sbobozKings'
 
 /* personal settings (the bot delay is only the default for rooms this player hosts) */
 function defaultSettings(){
-  return {hand:'dyn', aid:true, aidDim:true, aidSb:false, aidAll:true, aidSafe:false, botDelay:0};
+  return {hand:'dyn', aid:true, aidDim:true, aidSb:false, aidAll:true, aidSafe:false, botDelay:0, autoBot:''};
 }
 function cleanSettings(d){
   const o = defaultSettings();
   if(!d || typeof d!=='object') return o;
   if(['dyn','right','left'].includes(d.hand)) o.hand = d.hand;
   ['aid','aidDim','aidSb','aidAll','aidSafe'].forEach(k=>{ if(typeof d[k]==='boolean') o[k] = d[k]; });
+  if(typeof d.autoBot==='string' && (d.autoBot==='' || (typeof BOT_PERSONAS!=='undefined' && BOT_PERSONAS[d.autoBot]))) o.autoBot = d.autoBot;
   if(typeof d.botDelay==='number' && isFinite(d.botDelay)) o.botDelay = Math.max(0, Math.min(5, Math.round(d.botDelay*2)/2));
   return o;
 }
@@ -3719,11 +4433,18 @@ function newMember(kind, name, avatar, extra){
   return m;
 }
 
+/* how this bot feels about every person in the room: {memberId: value} */
+function moodsOfBot(b){
+  const out = {};
+  try{ R.members.forEach(x=>{ if(x.kind!=='human') return; const v = Bots.moodOf({kind:'bot', mid:b.mid, name:b.name}, {mid:x.mid, name:x.name}); if(v) out[x.mid] = v; }); }catch(e){}
+  return out;
+}
 function lobbyPublic(){
   return {
     code:R.code, phase:R.phase, net:R.net, settings:R.settings, build:BUILD_SHORT,
     members:R.members.map(m=>({mid:m.mid, kind:m.kind, name:m.name, avatar:m.avatar, elem:m.elem, color:m.color,
-      connected:m.connected, isHost:m.isHost, random:!!m.random, ready:!!m.ready}))
+      connected:m.connected, isHost:m.isHost, random:!!m.random, ready:!!m.ready,
+      mood: m.kind==='bot' ? moodsOfBot(m) : undefined}))
   };
 }
 
@@ -3927,7 +4648,7 @@ const Room = {
       case 'leave': if(!m.isHost) Room.guestLeft(m); break;
       case 'auto': {
         if(R.phase!=='game' || !G || m.kind!=='human' || m.pid<0) return;
-        Host.setAuto(m, !!msg.v); break;
+        Host.setAuto(m, !!msg.v, msg.bot); break;
       }
       case 'act': {
         if(R.phase!=='game' || !G) return;
@@ -4103,7 +4824,7 @@ const Host = {
     const order = R.members.slice();
     for(let i=order.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [order[i],order[j]] = [order[j],order[i]]; }
     order.forEach((m,i)=>{ m.pid = i; });
-    const mem = order.map(m=>({kind:m.kind, name:m.name, avatar:m.avatar, elem:m.elem, color:m.color}));
+    const mem = order.map(m=>({mid:m.mid, kind:m.kind, name:m.name, avatar:m.avatar, elem:m.elem, color:m.color}));
     initGame(mem, {twoDecks:R.settings.twoDecks});
     R.members.forEach(m=>{ if(m.kind==='human' && !m.connected) G.players[m.pid].connected = false; });
     R.myPid = R.members.find(m=>m.isHost).pid;
@@ -4188,11 +4909,12 @@ const Host = {
   },
 
   /* Autoplay: a bot plays for a person who keeps watching. */
-  setAuto(m, on){
+  setAuto(m, on, bot){
     if(!G || G.phase!=='play') return;
     const p = G.players[m.pid]; if(!p || p.kind!=='human' || !!p.auto===on) return;
     p.auto = on;
-    log(on ? `${p.name} ha attivato l’autoplay: gioca un bot al suo posto.` : `${p.name} ha ripreso il controllo.`);
+    if(on) p.autoBot = (typeof bot==='string' && BOT_PERSONAS[bot]) ? bot : '';
+    log(on ? `${p.name} ha attivato l’autoplay: ${p.autoBot ? 'gioca lo stile di '+p.autoBot : 'gioca un bot'} al suo posto.` : `${p.name} ha ripreso il controllo.`);
     if(on){
       if(G.pending && G.pending.pid===p.id) resolvePendingByAI();
       Host.afterStep(true);
@@ -5700,6 +6422,7 @@ function render(){
   renderStatusStrip();
   centerBands();
   clearFabs(); placeDecal();
+  try{ refreshMoodModal(); }catch(e){}
 }
 
 function renderPiles(){
@@ -5809,7 +6532,7 @@ function renderOpponents(){
     }).join('');
     seat.innerHTML = `
       <div class="opp-head">
-        <span class="opp-name">${displayName(p)}${nameTag(p)}</span>${pingSpan(p)}
+        <span class="opp-name">${displayName(p)}${nameTag(p)}</span>${(p.kind==='bot' && BOT_PERSONAS[p.name] && !Client.replay) ? `<button class="opp-mood" data-omood="${p.id}" type="button" aria-label="Stato d’animo di ${esc(p.name)}">${moodFace(p.mood||0)}</button>` : ''}${pingSpan(p)}
         <span class="opp-counts" data-role="hand-pile">
           <span class="hand-count" title="carte in mano"><i class="mini-card-icon"></i>${p.hand.length}</span>
         </span>
@@ -6490,6 +7213,13 @@ function showResults(){
   renderResultsActions();
   document.getElementById('results-overlay').style.display = 'flex';
 }
+
+/* tapping a bot's face (or its seat name) shows how it plays and how it feels about you */
+document.getElementById('opponent-seats').addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('.opp-mood'); if(!b || Client.replay || Client.promptOpen) return;
+  const id = +b.dataset.omood, q = Client.V && Client.V.players[id]; if(!q) return;
+  showBotInfo(q.name, ()=>{ const x = Client.V && Client.V.players[id]; return x ? (x.mood||0) : 0; });
+});
 
 /* ============================================================
    REPLAYS
@@ -7659,6 +8389,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.6.0', major:true, d:'2026-11-06', title:'Personalità e miglioramento bot', items:['Ogni ninja ha il suo carattere: Zane il calcolatore, Cole il generoso, Jay il simpaticone, Lloyd il normale, Nya la competitiva, Kai il focoso','Il tasto i accanto al nome di un bot spiega come gioca','I bot ricordano le carte (chi più chi meno), valutano chi è in vantaggio e chi in svantaggio e scelgono se aiutare o ostacolare','Amicizie e rivalità tra i ninja, e rancori o gratitudine verso chi gioca con loro durante la stessa stanza o party','Davanti al rischio di stallo alcuni ninja lo evitano, altri accettano il pareggio','Autoplay: puoi scegliere lo stile di quale ninja usare']},
   {v:'1.5.4', d:'2026-11-06', title:'Replay senza effetti sul resto', items:['Uscendo dal replay dimensioni e layout tornano esattamente come prima','La scelta delle 5 scoperte si adatta sempre allo schermo']},
   {v:'1.5.3', d:'2026-11-06', title:'Fix replay in orizzontale', items:['Uscendo dal replay in orizzontale la barra sparisce e il layout torna normale']},
   {v:'1.5.2', d:'2026-11-06', title:'Replay: momenti chiave e aiuti', items:['Momenti chiave di tutti o solo del giocatore guardato','Bot riconoscibili (avatar e scritta bot) nei replay','Aiuti grafici (carte spente, sboboz) visibili nei replay','Meno spazio vuoto sotto le carte']},
@@ -7670,7 +8401,7 @@ const CHANGELOG = [
   {v:'1.4.3', d:'2026-11-01'},
   {v:'1.4.2', d:'2026-11-01'},
   {v:'1.4.1', d:'2026-11-01'},
-  {v:'1.4.0', major:true, d:'2026-11-01', title:'Aggiunta aiuti di gioco richiesti dai giocatori', items:[
+  {v:'1.4.0', major:true, d:'2026-11-01', title:'Aiuti di gioco richiesti dai giocatori', items:[
     'Impostazioni modalità orizzontale e aiuti grafici',
     'Ritardo dei bot e autoplay'
   ]},
@@ -8030,7 +8761,7 @@ const UI = {
       const rm = (isHost && !m.isHost) ? `<button class="s-x" data-rm="${m.mid}" title="${m.kind==='bot'?'Rimuovi bot':'Espelli'}">✕</button>` : '';
       html += `<div class="seat-row${me?' mine':''}">
         ${ava}
-        <span class="s-name">${esc(m.name)}</span>${ed}
+        <span class="s-name">${esc(m.name)}</span>${(m.kind==='bot' && !m.random && BOT_PERSONAS[m.name]) ? `<button class="s-info" data-binfo="${esc(m.name)}" type="button" aria-label="Come gioca ${esc(m.name)}">i</button><button class="s-mood" data-bmood="${m.mid}" data-bname="${esc(m.name)}" type="button" title="Come si sente verso di te" aria-label="Stato d’animo di ${esc(m.name)}">${moodFace((m.mood && m.mood[R.myMid]) || 0)}</button>` : ''}${ed}
         <span class="s-tags">${tags.join('')}</span>
         ${(m.kind==='human' && m.connected && (R.online || R.role==='guest')) ? `<span class="s-ping" data-ping="${(m.isHost && isHost) ? 'worst' : (m.isHost ? 'host' : m.mid)}"></span>` : ''}
         ${rnd}
@@ -8116,6 +8847,9 @@ const UI = {
     if(q('btn-ready')) q('btn-ready').onclick = ()=>{ const L = UI.lobbyData(); const m = L && L.members.find(x=>x.mid===R.myMid); sendToHost({t:'ready', v: !(m && m.ready)}); };
     if(q('btn-add-bot')) q('btn-add-bot').onclick = ()=>Room.addBot();
     if(q('btn-add-rnd')) q('btn-add-rnd').onclick = ()=>Room.addBot(true);
+    document.querySelectorAll('[data-binfo]').forEach(b=>{ b.onclick = e=>{ e.stopPropagation(); const mb = b.parentElement.querySelector('[data-bmood]'); showBotInfo(b.dataset.binfo, mb ? lobbyMoodGetter(+mb.dataset.bmood) : null); }; });
+    document.querySelectorAll('[data-bmood]').forEach(b=>{ b.onclick = e=>{ e.stopPropagation(); showBotInfo(b.dataset.bname, lobbyMoodGetter(+b.dataset.bmood)); }; });
+    try{ refreshMoodModal(); }catch(e){}
     document.querySelectorAll('[data-rnd]').forEach(b=>{ b.onclick = ()=>Room.toggleRandom(+b.dataset.rnd); });
     document.querySelectorAll('[data-rm]').forEach(b=>{ b.onclick = ()=>Room.removeMember(+b.dataset.rm); });
     if(q('st-plus')) q('st-plus').onclick = ()=>Room.fillBots(R.members.length+1);
@@ -8627,9 +9361,13 @@ function wireUp(){
   Replay.init().then(()=>{ try{ if(UI.current==='stats') renderStats(SF.tab); }catch(e){} });
   $('sm-rules').onclick = showRules;
   initSettings();
-  const toggleAuto = ()=>{ const me = Client.V && Client.V.players[Client.V.me]; if(!me) return; sendToHost({t:'auto', v:!me.auto}); };
+  const toggleAuto = ()=>{
+    const me = Client.V && Client.V.players[Client.V.me]; if(!me) return;
+    if(me.auto){ sendToHost({t:'auto', v:false}); return; }
+    chooseAutoBot(b=>{ Store.setOpt('autoBot', b); sendToHost({t:'auto', v:true, bot:b}); });
+  };
   $('sm-auto').onclick = toggleAuto;
-  $('auto-resume').onclick = toggleAuto;
+  $('auto-resume').onclick = ()=>{ const me = Client.V && Client.V.players[Client.V.me]; if(me && me.auto) sendToHost({t:'auto', v:false}); };
   $('sm-leave').onclick = ()=>$('btn-lobby-back').click();
   $('btn-log').onclick = showLog;
   $('btn-draw').onclick = ()=>{
@@ -8670,6 +9408,62 @@ function syncSettings(){
   $('st-delay').classList.toggle('ro', !hostLike);
   document.querySelector('.ss-note[data-n="delay"]').dataset.t = hostLike ? SET_INFO.delay : 'Lo decide l’host e può cambiarlo in qualsiasi momento, anche durante la partita.';
 }
+/* autoplay: which ninja's way of playing should take over? (their style only: no friendships, no grudges) */
+function chooseAutoBot(onPick){
+  const cur = Store.opt('autoBot') || '';
+  const row = (key, name, title, desc)=>`<button class="ab-row${key===cur?' sel':''}" data-ab="${key}" type="button">
+      ${key ? `<span class="s-ava bot" style="--c:${botColor(key)}">${esc(key[0])}</span>` : `<span class="s-ava">🤖</span>`}
+      <span class="ab-t"><b>${esc(name)}</b><i>${esc(title)}</i><small>${esc(desc)}</small></span></button>`;
+  const html = `<h3>Autoplay: chi gioca al tuo posto?</h3><p>Prende il suo stile di gioco, ma non i suoi amici e i suoi rancori.</p>
+    <div class="ab-list">${row('', 'Automatico', 'Stile neutro', 'Né buono né cattivo, niente di strano.')}${BOT_ORDER.map(k=>row(k, k, BOT_PERSONAS[k].title, BOT_PERSONAS[k].desc)).join('')}</div>
+    <div class="modal-btns"><button class="btn-secondary" id="ab-cancel" type="button">Annulla</button></div>`;
+  const box = Modal.open(html, 'modal-box-wide', true);
+  box.querySelectorAll('[data-ab]').forEach(b=>{ b.onclick = ()=>{ Modal.close(); onPick(b.dataset.ab); }; });
+  box.querySelector('#ab-cancel').onclick = ()=>Modal.close();
+}
+function botColor(name){ const n = NINJAGO_POOL.find(x=>x.name===name); return fixColor(n ? n.color : '#8a8f98'); }
+/* the face of a bot's mood towards you: 2 = very happy ... -2 = furious */
+const MOOD_COL = {2:'#4caf50', 1:'#a6d65b', 0:'#d9cfa4', '-1':'#f08a4b', '-2':'#e5483b'};
+function moodFace(v){
+  const L = moodLevel(v), c = MOOD_COL[L];
+  const mouth = {2:'<path d="M7 13.6c1.1 3.9 8.9 3.9 10 0z" fill="#1d1a12" stroke="#1d1a12" stroke-width="1" stroke-linejoin="round"/>',
+    1:'<path d="M7.6 14.2c1.6 2.3 7.2 2.3 8.8 0" fill="none" stroke="#1d1a12" stroke-width="1.7" stroke-linecap="round"/>',
+    0:'<path d="M8.4 15.6h7.2" fill="none" stroke="#1d1a12" stroke-width="1.7" stroke-linecap="round"/>',
+    '-1':'<path d="M8 16.8c1.5-1.9 6.5-1.9 8 0" fill="none" stroke="#1d1a12" stroke-width="1.7" stroke-linecap="round"/><path d="M6.6 8.6l3.6 1.3M17.4 8.6l-3.6 1.3" stroke="#1d1a12" stroke-width="1.5" stroke-linecap="round"/>',
+    '-2':'<path d="M7.6 17.6c1.6-3 7.2-3 8.8 0" fill="none" stroke="#1d1a12" stroke-width="1.9" stroke-linecap="round"/><path d="M6 7.4l4.8 2.7M18 7.4l-4.8 2.7" stroke="#1d1a12" stroke-width="1.9" stroke-linecap="round"/>'}[L];
+  return `<svg class="mface" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.6" fill="${c}" stroke="#1d1a12" stroke-opacity=".55" stroke-width="1.2"/><circle cx="8.9" cy="11.2" r="1.45" fill="#1d1a12"/><circle cx="15.1" cy="11.2" r="1.45" fill="#1d1a12"/>${mouth}</svg>`;
+}
+/* the "i" / the face next to a bot's name: how that ninja plays and how it feels about you (live) */
+function showBotInfo(name, getMood){
+  const per = BOT_PERSONAS[name]; if(!per) return;
+  const lab = {2:'molto amichevole', 1:'amichevole', '-1':'un po’ ostile'};
+  const rel = Object.keys(per.rel).sort((a,b)=>per.rel[b]-per.rel[a]).map(k=>`<li><b>${esc(k)}</b>: ${lab[per.rel[k]]}</li>`).join('');
+  Modal.open(`<h3><span class="s-ava bot" style="--c:${botColor(name)}">${esc(name[0])}</span> ${esc(name)} <small class="bi-t">${esc(per.title)}</small></h3>
+    ${getMood ? `<div class="bi-mood"><span id="bm-face"></span><span id="bm-text"></span></div>` : ''}
+    <p>${esc(per.desc)}</p>${rel ? `<div class="bi-rel">Con gli altri ninja:<ul>${rel}</ul><span>(con tutti gli altri è neutrale)</span></div>` : ''}
+    <div class="modal-btns"><button class="btn-primary" id="bi-ok" type="button">Ok</button></div>`, '', ()=>{ Modal._mood = null; Modal.close(); });
+  Modal._mood = getMood ? {name, get:getMood} : null;
+  refreshMoodModal();
+  document.getElementById('bi-ok').onclick = ()=>{ Modal._mood = null; Modal.close(); };
+}
+function refreshMoodModal(){
+  const m = Modal._mood; if(!m) return;
+  const f = document.getElementById('bm-face'), t = document.getElementById('bm-text');
+  if(!f || !t){ Modal._mood = null; return; }
+  const v = m.get() || 0, key = moodLevel(v)+'|'+v;
+  if(f.dataset.k===key) return; f.dataset.k = key;
+  f.innerHTML = moodFace(v); t.textContent = moodText(m.name, v);
+}
+/* how a bot of the lobby feels about me */
+function lobbyMoodGetter(mid){
+  return ()=>{
+    try{
+      const members = (R.role==='host') ? lobbyPublic().members : ((R.lobby && R.lobby.members) || []);
+      const b = members.find(x=>x.mid===mid); return b && b.mood ? (b.mood[R.myMid]||0) : 0;
+    }catch(e){ return 0; }
+  };
+}
+
 function initSettings(){
   { const phone = navigator.maxTouchPoints>0 && Math.min(screen.width, screen.height) <= 600; $('ss-handbox').style.display = phone ? '' : 'none'; }   // only phones have a sideways game
   document.querySelectorAll('.ss-note').forEach(n=>{ n.textContent = SET_INFO[n.dataset.n] || ''; });
