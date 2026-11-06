@@ -2044,8 +2044,8 @@ html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.5.3',   // mostrata in fondo alla home
-  buildTime: '2026-11-06T09:46',   // data e ora di creazione di questo file (per le novità)
+  version: '1.5.4',   // mostrata in fondo alla home
+  buildTime: '2026-11-06T09:54',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -6146,6 +6146,14 @@ function renderSetup(){
     };
     container.appendChild(el);
   });
+  /* the five columns always fit the screen, whatever size the last game left behind */
+  try{
+    const avail = (container.parentElement ? container.parentElement.clientWidth : 0) - 8;
+    const gap = parseFloat(getComputedStyle(container).columnGap) || 8;
+    const fit = Math.floor((avail - 4*gap - 6) / 5), cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--card-w')) || fit;
+    if(avail>100 && fit>0 && cur>fit){ const w = Math.max(36, fit); container.style.setProperty('--card-w', w+'px'); container.style.setProperty('--cw', w+'px'); container.style.setProperty('--card-h', (w*1.41).toFixed(1)+'px'); }
+    else { ['--card-w','--cw','--card-h'].forEach(k=>container.style.removeProperty(k)); }
+  }catch(e){}
   document.getElementById('setup-remaining').textContent = Math.max(5 - Client.setupSel.length, 0);
   document.getElementById('btn-confirm-setup').disabled = Client.setupSel.length!==5;
 }
@@ -6690,6 +6698,7 @@ const Replay = {
       rec = JSON.parse(await repUnpack(row)); me = row.me || 0;
     }catch(e){ UI.toastTop('Replay non disponibile'); return; }
     const {S, L} = Replay.build(rec);
+    Replay.saveLook();
     Client.reset();
     Client.replay = {rec, S, L, idx:0, viewer:Math.max(0, Math.min(me, rec.n-1)), playing:false, speed:1, tok:0, loop:false};
     document.documentElement.classList.add('replaying');
@@ -6707,9 +6716,32 @@ const Replay = {
     const fl = document.getElementById('fx-layer'); if(fl) fl.innerHTML = '';
     document.documentElement.classList.remove('replaying');
     document.documentElement.style.removeProperty('--rp-h');
+    Replay.restoreLook();
     document.getElementById('replay-bar').style.display = 'none';
     try{ renderStats(SF.tab); }catch(e){}
     UI.show('stats');
+  },
+  /* the replay fits the cards to its own (smaller) screen: the sizes of the rest of the game are put back exactly as they were */
+  LOOK:['--card-w','--card-h','--t-w','--t-h','--u','--col-w','--mz'],
+  saveLook(){
+    const root = document.documentElement, gs = document.getElementById('game-screen');
+    const o = {root:{}, gs:{}, fs:root.style.fontSize};
+    Replay.LOOK.forEach(k=>{ o.root[k] = root.style.getPropertyValue(k); });
+    ['--small-w','--small-h'].forEach(k=>{ o.gs[k] = gs.style.getPropertyValue(k); });
+    Replay._look = o;
+  },
+  restoreLook(){
+    const o = Replay._look; Replay._look = null;
+    const root = document.documentElement, gs = document.getElementById('game-screen');
+    if(o){
+      Replay.LOOK.forEach(k=>{ if(o.root[k]) root.style.setProperty(k, o.root[k]); else root.style.removeProperty(k); });
+      root.style.fontSize = o.fs || '';
+      for(const k in o.gs){ if(o.gs[k]) gs.style.setProperty(k, o.gs[k]); else gs.style.removeProperty(k); }
+    }
+    gs.classList.remove('sbs');
+    try{ syncLand(); }catch(e){}
+    document.querySelectorAll('#game-screen .fab-clear').forEach(s=>{ s.classList.remove('fab-clear'); s.style.removeProperty('--fabpad'); s.style.removeProperty('--fabh'); });
+    const bar = document.getElementById('replay-bar'); if(bar) bar.style.display = 'none';
   },
   measure(){
     const bar = document.getElementById('replay-bar');
@@ -7627,6 +7659,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.5.4', d:'2026-11-06', title:'Replay senza effetti sul resto', items:['Uscendo dal replay dimensioni e layout tornano esattamente come prima','La scelta delle 5 scoperte si adatta sempre allo schermo']},
   {v:'1.5.3', d:'2026-11-06', title:'Fix replay in orizzontale', items:['Uscendo dal replay in orizzontale la barra sparisce e il layout torna normale']},
   {v:'1.5.2', d:'2026-11-06', title:'Replay: momenti chiave e aiuti', items:['Momenti chiave di tutti o solo del giocatore guardato','Bot riconoscibili (avatar e scritta bot) nei replay','Aiuti grafici (carte spente, sboboz) visibili nei replay','Meno spazio vuoto sotto le carte']},
   {v:'1.5.1', d:'2026-11-06', title:'Sistemazioni replay', items:['Anche i bot mostrano i 2 e il jolly in fondo alle scoperte','Replay: tolto il tasto X e la scritta sotto le carte','Replay: segni rossi quando qualcuno pesca il tavolo','Replay: salta partita ora si può rivedere per intero']},
