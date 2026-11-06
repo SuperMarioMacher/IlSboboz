@@ -1777,6 +1777,14 @@ html.replaying #btn-pickup, html.replaying #action-msg{ display:none !important;
 .rp-viewer small{ opacity:.7; font-size:.72em; }
 .rp-btns button.rp-x{ margin-right:0; margin-left:8px; color:#ef7f72; border-color:rgba(229,72,59,.5); }
 .rp-btns button.rp-x svg{ width:16px; height:16px; }
+.modal-btns .rp-ava{ width:24px; height:24px; border-radius:50%; background:rgba(232,192,95,.2); display:inline-flex; align-items:center; justify-content:center; font-size:.95rem; vertical-align:middle; margin-right:6px; }
+.modal-btns .rp-ava.bot{ background:var(--c); }
+.modal-btns small{ opacity:.7; font-size:.75em; }
+/* replay: the footer under the hand (buttons, messages) is not needed */
+html.replaying .human-footer, html.replaying #auto-bar{ display:none !important; }
+html.replaying #human-area{ padding-bottom:8px !important; }
+html.replaying.land #game-screen #human-area{ padding-top:12px !important; padding-bottom:10px !important; justify-content:center !important; }
+html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
 
 </style>
 </head>
@@ -2037,7 +2045,7 @@ html.replaying #btn-pickup, html.replaying #action-msg{ display:none !important;
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
   version: '1.5.2',   // mostrata in fondo alla home
-  buildTime: '2026-11-06T09:30',   // data e ora di creazione di questo file (per le novità)
+  buildTime: '2026-11-06T09:40',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -6798,13 +6806,18 @@ const Replay = {
     document.getElementById('rp-play').setAttribute('aria-label', rp.playing ? 'Pausa' : 'Riproduci');
     const p = rp.rec.pl[rp.viewer];
     const isBot = p.k==='b';
-    const ava = (isBot && p.c && p.a!=='🎲') ? '<span class="rp-ava bot" style="--c:'+esc(fixColor(p.c))+'">'+esc((p.n||'N')[0])+'</span>' : '<span class="rp-ava">'+esc(p.a||'🥷')+'</span>';
+    const ava = Replay.avaHtml(p);
     document.getElementById('rp-view').innerHTML = ava + '<span class="rp-vn">' + esc(p.n) + (isBot ? ' <small>(bot)</small>' : '') + '</span>';
+  },
+  avaHtml(p){
+    return (p.k==='b' && p.c && p.a!=='🎲')
+      ? '<span class="rp-ava bot" style="--c:'+esc(fixColor(p.c))+'">'+esc((p.n||'N')[0])+'</span>'
+      : '<span class="rp-ava">'+esc(p.a||'🥷')+'</span>';
   },
   chooseViewer(){
     const rp = Client.replay; if(!rp) return;
     Modal.choice('Punto di vista', 'Da chi vuoi vedere la partita? Vedrai le sue carte in mano.',
-      rp.rec.pl.map((p, k)=>[(p.k==='b' ? '🤖' : (p.a||'🥷')) + ' ' + p.n + (p.k==='b' ? ' (bot)' : '') + (k===rp.viewer ? '  ✓' : ''), String(k)]),
+      rp.rec.pl.map((p, k)=>[Replay.avaHtml(p) + ' <span>' + esc(p.n) + (p.k==='b' ? ' <small>(bot)</small>' : '') + (k===rp.viewer ? '  ✓' : '') + '</span>', String(k)]),
       v=>{ if(v!==undefined && v!==null) Replay.setViewer(parseInt(v,10)); });
   }
 };
