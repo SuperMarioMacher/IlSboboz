@@ -1760,7 +1760,7 @@ html.replaying #react-btn, html.replaying #btn-react, html.replaying #auto-bar{ 
 .g-replay{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin:8px 0 4px; }
 .g-replay svg{ width:18px; height:18px; }
 /* landscape phones: the whole bar on one line */
-html.land #replay-bar{ display:flex !important; align-items:center; gap:10px; padding:4px 10px max(env(safe-area-inset-bottom,0px),4px); }
+html.replaying.land #replay-bar{ display:flex !important; align-items:center; gap:10px; padding:4px 10px max(env(safe-area-inset-bottom,0px),4px); }
 html.land .rp-top{ margin:0; gap:8px; flex:0 0 auto; }
 html.land #rp-step{ display:none; }
 html.land .rp-slider{ flex:1 1 auto; min-width:60px; }
@@ -2044,8 +2044,8 @@ html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.5.2',   // mostrata in fondo alla home
-  buildTime: '2026-11-06T09:40',   // data e ora di creazione di questo file (per le novità)
+  version: '1.5.3',   // mostrata in fondo alla home
+  buildTime: '2026-11-06T09:46',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -7627,6 +7627,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.5.3', d:'2026-11-06', title:'Fix replay in orizzontale', items:['Uscendo dal replay in orizzontale la barra sparisce e il layout torna normale']},
   {v:'1.5.2', d:'2026-11-06', title:'Replay: momenti chiave e aiuti', items:['Momenti chiave di tutti o solo del giocatore guardato','Bot riconoscibili (avatar e scritta bot) nei replay','Aiuti grafici (carte spente, sboboz) visibili nei replay','Meno spazio vuoto sotto le carte']},
   {v:'1.5.1', d:'2026-11-06', title:'Sistemazioni replay', items:['Anche i bot mostrano i 2 e il jolly in fondo alle scoperte','Replay: tolto il tasto X e la scritta sotto le carte','Replay: segni rossi quando qualcuno pesca il tavolo','Replay: salta partita ora si può rivedere per intero']},
   {v:'1.5.0', major:true, d:'2026-11-06', title:'Replay delle partite', items:['Ogni partita viene registrata e si può rivedere','Slider, velocità e punto di vista di ogni giocatore']},
