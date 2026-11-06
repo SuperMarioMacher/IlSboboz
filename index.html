@@ -1727,6 +1727,49 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
 /* end-of-game results are wider on a computer */
 @media (min-width:900px){ #results-box{ max-width:640px !important; } }
 
+/* ============ 1.5.0 replay ============ */
+#replay-bar{ position:fixed; left:0; right:0; bottom:0; z-index:60; box-sizing:border-box; padding:8px 12px max(env(safe-area-inset-bottom,0px), 8px); background:linear-gradient(180deg,#0d2a20,#081a13); border-top:1px solid rgba(232,192,95,.35); box-shadow:0 -8px 24px rgba(0,0,0,.45); color:var(--cream); font-family:'Synonym','Inter',sans-serif; }
+html.replaying #game-screen{ height:calc(var(--app-height) - var(--rp-h, 0px)) !important; }
+html:not(.replaying) #sm-rexit{ display:none !important; }
+html.replaying #btn-log, html.replaying #btn-draw, html.replaying #sm-auto, html.replaying #btn-end, html.replaying #sm-room, html.replaying #sm-ping, html.replaying #btn-fullscreen-game ~ *{ }
+html.replaying #btn-log, html.replaying #btn-draw, html.replaying #sm-auto, html.replaying #btn-end, html.replaying #sm-leave{ display:none !important; }
+html.replaying #react-btn, html.replaying #btn-react, html.replaying #auto-bar{ display:none !important; }
+.rp-top{ display:flex; align-items:center; gap:10px; font-size:.82rem; margin-bottom:6px; }
+#rp-step{ flex:1 1 auto; font-weight:700; color:var(--gold-bright); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.rp-speed{ display:inline-flex; align-items:center; gap:2px; background:rgba(0,0,0,.3); border:1px solid rgba(232,192,95,.22); border-radius:999px; padding:2px; }
+.rp-speed button{ width:28px; height:28px; border-radius:50%; border:0; background:transparent; color:var(--gold-bright); font:700 1.1rem/1 'Synonym','Inter',sans-serif; cursor:pointer; }
+.rp-speed b{ min-width:2.4em; text-align:center; font-size:.82rem; font-variant-numeric:tabular-nums; }
+.rp-viewer{ display:inline-flex; align-items:center; gap:6px; max-width:42%; height:32px; padding:0 10px 0 5px; border-radius:999px; border:1px solid rgba(232,192,95,.35); background:rgba(0,0,0,.3); color:var(--cream); font:600 .8rem 'Synonym','Inter',sans-serif; cursor:pointer; }
+.rp-viewer .rp-ava{ width:22px; height:22px; border-radius:50%; background:rgba(232,192,95,.2); display:inline-flex; align-items:center; justify-content:center; font-size:.9rem; flex:0 0 auto; }
+.rp-viewer .rp-vn{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rp-slider{ position:relative; height:30px; display:flex; align-items:center; }
+#rp-marks{ position:absolute; left:10px; right:10px; top:2px; height:8px; pointer-events:none; }
+#rp-marks i{ position:absolute; top:0; width:3px; height:8px; margin-left:-1px; border-radius:2px; background:#ffb347; }
+#rp-marks i.fn{ background:#7fe08a; height:10px; top:-1px; }
+#rp-range{ -webkit-appearance:none; appearance:none; width:100%; height:30px; margin:0; background:transparent; cursor:pointer; touch-action:none; }
+#rp-range::-webkit-slider-runnable-track{ height:6px; border-radius:4px; background:rgba(255,255,255,.2); }
+#rp-range::-moz-range-track{ height:6px; border-radius:4px; background:rgba(255,255,255,.2); }
+#rp-range::-webkit-slider-thumb{ -webkit-appearance:none; width:22px; height:22px; margin-top:-8px; border-radius:50%; background:var(--gold-bright); border:2px solid #1a1204; box-shadow:0 1px 6px rgba(0,0,0,.5); }
+#rp-range::-moz-range-thumb{ width:18px; height:18px; border-radius:50%; background:var(--gold-bright); border:2px solid #1a1204; }
+.rp-btns{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:2px; }
+.rp-btns button{ width:42px; height:42px; border-radius:12px; border:1px solid rgba(232,192,95,.3); background:rgba(0,0,0,.28); color:var(--gold-bright); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.rp-btns button svg{ width:20px; height:20px; }
+.rp-btns button.main{ width:58px; background:var(--gold-bright); color:#1a1204; border-color:var(--gold-bright); }
+.rp-btns button.main svg{ width:24px; height:24px; }
+.rp-btns button.rp-small{ width:36px; height:36px; margin-right:8px; color:#ef7f72; border-color:rgba(229,72,59,.5); }
+.rp-btns button.rp-small svg{ width:16px; height:16px; }
+.g-replay{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin:8px 0 4px; }
+.g-replay svg{ width:18px; height:18px; }
+/* landscape phones: the whole bar on one line */
+html.land #replay-bar{ display:flex !important; align-items:center; gap:10px; padding:4px 10px max(env(safe-area-inset-bottom,0px),4px); }
+html.land .rp-top{ margin:0; gap:8px; flex:0 0 auto; }
+html.land #rp-step{ display:none; }
+html.land .rp-slider{ flex:1 1 auto; min-width:60px; }
+html.land .rp-btns{ margin:0; flex:0 0 auto; }
+html.land .rp-btns button{ width:34px; height:34px; } html.land .rp-btns button.main{ width:44px; }
+html.land .rp-viewer{ max-width:130px; height:30px; }
+@media (min-width:900px){ #replay-bar{ padding:10px max(24px, calc((100vw - 760px)/2)) 12px; } }
+
 </style>
 </head>
 <body>
@@ -1930,6 +1973,18 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
   <button class="fab" id="btn-fullscreen-game" aria-label="Schermo intero">⛶</button>
   <button class="fab" id="btn-menu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 </div>
+<div id="replay-bar" style="display:none">
+  <div class="rp-top"><span id="rp-step">Mossa 0 / 0</span><span class="rp-speed"><button type="button" id="rp-slow" aria-label="Più lento">−</button><b id="rp-sp">1×</b><button type="button" id="rp-fast" aria-label="Più veloce">+</button></span><button type="button" id="rp-view" class="rp-viewer" aria-label="Punto di vista"></button></div>
+  <div class="rp-slider"><div id="rp-marks"></div><input type="range" id="rp-range" min="0" max="0" value="0" aria-label="Posizione nella partita"></div>
+  <div class="rp-btns">
+    <button type="button" id="rp-exit" class="rp-small" aria-label="Esci dal replay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+    <button type="button" id="rp-start" aria-label="All'inizio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M19 5.5v13L9 12z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg></button>
+    <button type="button" id="rp-prev" aria-label="Mossa precedente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5.5v13L7 12z" fill="currentColor"/></svg></button>
+    <button type="button" id="rp-play" class="main" aria-label="Riproduci"></button>
+    <button type="button" id="rp-next" aria-label="Mossa successiva"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5v13L17 12z" fill="currentColor"/></svg></button>
+    <button type="button" id="rp-end" aria-label="Alla fine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M5 5.5v13L15 12z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg></button>
+  </div>
+</div>
 <div id="side-overlay"></div>
 <aside id="side-menu" aria-label="Menu">
   <div class="sm-head"><b>Menu</b></div>
@@ -1961,6 +2016,7 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
   <div class="sm-info" id="sm-room"></div>
   <div class="sm-info" id="sm-ping"></div>
   <button class="sm-item danger" data-ctx="lobby" id="sm-leave"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/></svg> <span class="sm-label">Esci dalla stanza</span></button>
+  <button class="sm-item danger" data-ctx="game" id="sm-rexit"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h11"/></svg><span class="sm-label">Esci dal replay</span></button>
   <button class="sm-item danger" data-ctx="game setup" id="btn-end"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/></svg> <span class="sm-label">Termina</span></button>
   <div class="sm-info sm-ver" id="sm-ver"></div>
   </div>
@@ -1971,8 +2027,8 @@ html.fs:not(.land) #party-skip, html.fs:not(.land) #party-fast{ bottom:calc(var(
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.4.6',   // mostrata in fondo alla home
-  buildTime: '2026-11-03T10:38',   // data e ora di creazione di questo file (per le novità)
+  version: '1.5.0',   // mostrata in fondo alla home
+  buildTime: '2026-11-06T08:06',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -2117,10 +2173,12 @@ function initGame(members, opts){
   };
   G.startingTurn = G.turn;
   players.forEach(p=>{ p.st.maxHand = p.hand.length; });
+  try{ if(typeof Rec!=='undefined') Rec.begin(); }catch(e){}
   return G;
 }
 
 function log(msg){
+  if(G.rec) G.rec.buf.push(msg);
   G.log.unshift(msg);
   if(G.log.length>80) G.log.pop();
 }
@@ -3354,6 +3412,8 @@ const Store = {
   },
   removeParty(id){ this.data.parties = this.data.parties.filter(p=>p.id!==id); this.save(); },
   remove(id){
+    const gone = this.data.games.find(g=>g.id===id);
+    if(gone && typeof Replay!=='undefined') Replay.remove(Replay.keyOf(gone.ts, gone.n));
     this.data.games = this.data.games.filter(g=>g.id!==id);
     this.save();
   },
@@ -3377,6 +3437,7 @@ const Store = {
     return true;
   },
   reset(){
+    if(typeof Replay!=='undefined') Replay.clearAll();
     const keep = {name:this.data.name, avatar:this.data.avatar, id:this.data.clientId, seen:this.data.seenVer};
     this.data = defaultProfile();
     this.data.name = keep.name; this.data.avatar = keep.avatar; this.data.clientId = keep.id; this.data.seenVer = keep.seen;
@@ -4098,6 +4159,7 @@ const Host = {
     if(R.party){ try{ res.party = Party.addGame(res); }catch(e){ R.party = null; } }
     R.phase = 'results'; R.lastResults = res; R.partyEndData = null;
     broadcastGuests({t:'results', res});
+    try{ const rec = Rec.finish(res); if(rec){ Replay.save(rec, R.myPid); broadcastGuests({t:'replay', rec}); } }catch(e){}
     // statistics leave as soon as the game ends (not when somebody presses a button later)
     try{ Analytics.gameEnd(res, R.online); }catch(e){}
     if(res.party && res.party.last){ try{ Analytics.partyEnd(Party.finalize()); }catch(e){} }
@@ -4122,6 +4184,7 @@ const Host = {
   /* one batch of events + a personalised view for every human */
   broadcastBatch(forceNoEvents){
     if(!G) return;
+    try{ Rec.step(G.evq); }catch(e){}
     const evs = forceNoEvents ? [] : G.evq;
     G.evq = [];
     R.members.forEach(m=>{
@@ -4339,6 +4402,7 @@ const Guest = {
       case 'batch': Client.onBatch(msg); break;
       case 'prompt': Client.onPrompt(msg); break;
       case 'results': Client.onResults(msg.res, Client.V ? Client.V.me : 0, true); break;
+      case 'replay': try{ Replay.save(msg.rec, Client.V ? Client.V.me : 0); }catch(e){} break;
       case 'partyEnd': Client.onPartyEnd(msg.data); break;
       case 'partyAdv': PartyShow.onAdv(msg); break;
       case 'partyCtl': PartyShow.onCtl(msg); break;
@@ -4590,6 +4654,7 @@ function clearHeld(fade){
   }
 }
 
+let ANIM_SCALE = 1;      // replays at 2x fly the cards faster
 function flyClone(innerHtml, fromRect, toRect, opts, onDone){
   const layer = document.getElementById('anim-layer');
   const wrap = document.createElement('div');
@@ -4615,14 +4680,14 @@ function flyClone(innerHtml, fromRect, toRect, opts, onDone){
       {transform:T(dx,dy,s0,0)},
       {transform:T(dx*.45,dy*.45,s0+(1-s0)*.55,rr), offset:.55},
       {transform:T(0,0,1,0)}
-    ], {duration:380, easing:'cubic-bezier(.2,.8,.3,1)', fill:'forwards'});
+    ], {duration:380*ANIM_SCALE, easing:'cubic-bezier(.2,.8,.3,1)', fill:'forwards'});
     const fin = ()=>{ settle(card, opts); if(onDone) onDone(); };
     anim.onfinish = fin;
     return;
   }
 
   positionFixed(card, fromRect);
-  card.style.transition = 'transform .38s cubic-bezier(.2,.8,.3,1), opacity .38s ease';
+  card.style.transition = `transform ${.38*ANIM_SCALE}s cubic-bezier(.2,.8,.3,1), opacity ${.38*ANIM_SCALE}s ease`;
   card.style.willChange = 'transform';
   layer.appendChild(card);
   card.getBoundingClientRect();
@@ -4631,7 +4696,7 @@ function flyClone(innerHtml, fromRect, toRect, opts, onDone){
   requestAnimationFrame(()=>{
     card.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
   });
-  setTimeout(()=>{ settle(card, opts); if(onDone) onDone(); }, 390);
+  setTimeout(()=>{ settle(card, opts); if(onDone) onDone(); }, 390*ANIM_SCALE);
 }
 
 /* Flip a hidden card face-up in place, pause briefly so the player can
@@ -5292,12 +5357,17 @@ function overlapDelay(from, to){
     const by = s=>3*(1-s)*(1-s)*s*.8 + 3*(1-s)*s*s + s*s*s;
     let lo = 0, hi = 1;
     for(let i=0;i<24;i++){ const m = (lo+hi)/2; if(by(m)<need) lo = m; else hi = m; }
-    return Math.max(0, Math.round(bx((lo+hi)/2)*380));
+    return Math.max(0, Math.round(bx((lo+hi)/2)*380*ANIM_SCALE));
   }catch(e){ return 190; }
 }
 function dropEffectIcons(after){
   const ep = playEpoch; Fx._noPin = true;
   setTimeout(()=>{ if(ep===Client.epoch){ Fx.clearFlash(); Fx.hidePinned(); } }, after);
+}
+/* a card-sized spot in the middle of my hand (replays: my own discards and J draws have no dialog to start from) */
+function handCenterRect(){
+  const t = tableRect(), h = document.getElementById('human-hand').getBoundingClientRect();
+  return {left:h.left + (h.width-t.width)/2, top:h.top + (h.height-t.height)/2, width:t.width, height:t.height};
 }
 function fly(html, from, to, opts){ if(playEpoch!==Client.epoch) return Promise.resolve(); return new Promise(res=>flyClone(html, from, to, opts||{}, res)); }
 
@@ -5412,7 +5482,7 @@ const Client = {
   /* ---------- player intentions ---------- */
   canAct(){
     const V = Client.V;
-    if(!V || V.phase!=='play') return false;
+    if(!V || V.phase!=='play' || Client.replay) return false;
     const me = V.players[V.me];
     return V.turn===V.me && !me.finished && !me.auto && V.pendingPid<0 && !Client.acting && !Client.busy && Client.queue.length===0;
   },
@@ -5555,9 +5625,9 @@ async function playEvent(ev){
       break;
     }
     case 'discard': {
-      if(mine) break;   // the discarding player already saw their own card fly out of the dialog
+      if(mine && !Client.replay) break;   // the discarding player already saw their own card fly out of the dialog
       const to = document.getElementById('super-pile-visual');
-      const from = miniCardRectNear(ev.pid);
+      const from = mine ? handCenterRect() : miniCardRectNear(ev.pid);
       if(to && from) await fly('<div class="card-back"></div>', from, cardRectIn(to), {growTo:true, rotate:0, hold:true});
       break;
     }
@@ -5565,7 +5635,9 @@ async function playEvent(ev){
       const sp = document.getElementById('super-pile-visual');
       if(!sp) break;
       const from = cardRectIn(sp);
-      if(mine){
+      if(mine && Client.replay){
+        await fly('<div class="card-back"></div>', from, handCenterRect(), {growTo:true, rotate:0, hold:true});
+      } else if(mine){
         if(ev.card) Client.fresh = ev.card.uid;      // my own card already flew out of the dialog into my hand: it is shown to me when the hand is drawn
         break;
       } else {
@@ -5654,7 +5726,7 @@ function renderPiles(){
   const zone = V.phase==='play' ? currentZone(me) : null;
   const canDrop = Client.canAct() && (zone==='hand' || zone==='faceup');
   /* the gold frame is a "your turn" sign: it must not blink off while a batch is being processed */
-  const myTurnDrop = V.phase==='play' && V.turn===V.me && !me.finished && !me.auto && V.pendingPid<0 && (zone==='hand' || zone==='faceup');
+  const myTurnDrop = !Client.replay && V.phase==='play' && V.turn===V.me && !me.finished && !me.auto && V.pendingPid<0 && (zone==='hand' || zone==='faceup');
   dz.classList.toggle('droppable', myTurnDrop);
   dz.classList.toggle('has-selection', myTurnDrop && Client.sel.length>0);
 }
@@ -5973,6 +6045,7 @@ function renderHuman(){
     setBtn(false);
     msg.textContent = 'Tocca le tue carte coperte per rivelarne una.';
   } else { setBtn(false); msg.textContent = ''; }
+  if(Client.replay){ setBtn(false); msg.textContent = 'Replay · punto di vista di ' + p.name; }
 }
 
 function renderStatusStrip(){
@@ -5981,10 +6054,10 @@ function renderStatusStrip(){
   const la = document.getElementById('last-action');
   if(V.phase==='play'){
     const p = V.players[V.turn];
-    tb.textContent = (p.id===V.me && !p.auto) ? 'Tocca a te!' : (p.id===V.me ? 'Gioca il bot per te' : `Turno di ${p.name}`);
+    tb.textContent = Client.replay ? `Turno di ${p.name}` : ((p.id===V.me && !p.auto) ? 'Tocca a te!' : (p.id===V.me ? 'Gioca il bot per te' : `Turno di ${p.name}`));
   } else tb.textContent = '';
   /* make it obvious when it is my turn: glow, pill, tab title, a short buzz */
-  const mineNow = V.phase==='play' && V.turn===V.me && !myPlayer().finished && !myPlayer().auto;
+  const mineNow = V.phase==='play' && V.turn===V.me && !myPlayer().finished && !myPlayer().auto && !Client.replay;
   document.getElementById('game-screen').classList.toggle('my-turn', mineNow);
   tb.classList.toggle('mine', mineNow);
   if(mineNow && !Client._wasMine){ try{ if(navigator.vibrate) navigator.vibrate(45); }catch(e){} }
@@ -6374,6 +6447,366 @@ function showResults(){
   renderResultsActions();
   document.getElementById('results-overlay').style.display = 'flex';
 }
+
+/* ============================================================
+   REPLAYS
+   - Rec: the host writes down every game as it is played. Cards are
+     numbers (the deck is stored once); after the starting position only
+     what CHANGED in every step is kept (a few numbers), plus the events
+     (so the animations can be played again) and the new diary lines.
+     A whole game is some 10-30 KB, much less once compressed.
+   - Replay: the saved games live in IndexedDB on each device (the host
+     sends the finished record to everybody in the room). The viewer
+     rebuilds every position and shows it with the normal game screen,
+     as seen by any of the players.
+============================================================ */
+const REP_MAX = 60;           // replays kept on a device (the oldest go first)
+
+/* ---------------- recorder (host) ---------------- */
+const Rec = {
+  begin(){
+    const deck = [];
+    const all = [];
+    G.players.forEach(p=>{ p.hand.forEach(c=>all.push(c)); p.faceDown.forEach(c=>all.push(c)); });
+    G.drawPile.forEach(c=>all.push(c));
+    all.forEach(c=>{ deck[parseInt(c.uid.slice(1),10)] = [c.rank, c.suit]; });
+    G.rec = {deck, init:null, prevJ:null, st:[], buf:[], l0:[]};
+  },
+  /* card -> number: the card (0-199), the value a jolly took, the "restored" flag */
+  code(c){
+    const i = parseInt(c.uid.slice(1),10);
+    const j = c.wasJolly ? RANKS.indexOf(c.rank)+1 : 0;
+    return i + 200*(j + 14*(c.restored ? 1 : 0));
+  },
+  snap(){
+    const S = {};
+    G.players.forEach((p,i)=>{
+      S['h'+i] = p.hand.map(Rec.code);
+      S['s'+i] = p.slots.map(s=>[s.down ? Rec.code(s.down) : -1, s.up ? Rec.code(s.up) : -1]);
+    });
+    S.t = G.table.map(Rec.code); S.sb = G.sboboz.map(Rec.code); S.sp = G.superSboboz.map(Rec.code);
+    S.dn = G.drawPile.length; S.tu = G.turn; S.ph = G.phase;
+    S.cn = G.constraint || null; S.su = G.suppressNext ? 1 : 0;
+    S.fo = G.finishOrder.map(p=>p.id); S.pd = G.pending ? G.pending.pid : -1;
+    return S;
+  },
+  enc(e){
+    const o = {};
+    for(const k in e){
+      const v = e[k];
+      if(v && typeof v==='object' && !Array.isArray(v) && v.uid) o[k] = Rec.code(v);
+      else if(Array.isArray(v) && v.length && v[0] && typeof v[0]==='object' && v[0].uid) o[k] = v.map(Rec.code);
+      else o[k] = v;
+    }
+    return o;
+  },
+  /* called for every batch the host sends (with the raw, unmasked events) */
+  step(evs){
+    const rc = G && G.rec; if(!rc) return;
+    if(!rc.init){
+      if(G.phase==='setup') return;               // the replay starts when the play does
+      rc.init = Rec.snap(); rc.prevJ = {};
+      for(const k in rc.init) rc.prevJ[k] = JSON.stringify(rc.init[k]);
+      rc.l0 = rc.buf.slice(); rc.buf.length = 0;
+      return;
+    }
+    const S = Rec.snap(), d = {};
+    for(const k in S){ const j = JSON.stringify(S[k]); if(j!==rc.prevJ[k]){ d[k] = S[k]; rc.prevJ[k] = j; } }
+    const e = (evs||[]).map(Rec.enc), L = rc.buf.splice(0);
+    if(!e.length && !L.length && !Object.keys(d).length) return;
+    const st = {};
+    if(e.length) st.e = e;
+    if(Object.keys(d).length) st.d = d;
+    if(L.length) st.L = L;
+    rc.st.push(st);
+  },
+  finish(res){
+    const rc = G && G.rec;
+    if(!rc || !rc.init) return null;
+    Rec.step([]);
+    return {
+      v:1, ts:G.startedAt, n:G.players.length, nd:G.numDecks, hj:G.hasJolly ? 1 : 0, th:G.sbobozThreshold,
+      pl:G.players.map(p=>({n:p.name, k:p.kind==='bot' ? 'b' : 'h', a:p.avatar, e:p.elem, c:p.color})),
+      deck:rc.deck, init:rc.init, l0:rc.l0, st:rc.st,
+      res:{rows:res.rows.map(r=>({pid:r.pid, pl:r.place, t:r.tie ? 1 : 0})), stale:res.stalemate ? 1 : 0, draw:res.draw ? 1 : 0, secs:res.secs||0}
+    };
+  }
+};
+
+/* ---------------- storage (IndexedDB, compressed) ---------------- */
+const RepDB = {
+  _db:null,
+  open(){
+    if(RepDB._db) return RepDB._db;
+    RepDB._db = new Promise((res, rej)=>{
+      if(typeof indexedDB==='undefined'){ rej('no idb'); return; }
+      const r = indexedDB.open('ilsboboz-replays', 1);
+      r.onupgradeneeded = ()=>{ r.result.createObjectStore('r', {keyPath:'id'}); };
+      r.onsuccess = ()=>res(r.result);
+      r.onerror = ()=>rej(r.error);
+    });
+    return RepDB._db;
+  },
+  async tx(mode, fn){
+    const db = await RepDB.open();
+    return new Promise((res, rej)=>{
+      const t = db.transaction('r', mode), s = t.objectStore('r');
+      const out = fn(s);
+      t.oncomplete = ()=>res(out && 'result' in out ? out.result : undefined);
+      t.onerror = ()=>rej(t.error); t.onabort = ()=>rej(t.error);
+    });
+  },
+  put(row){ return RepDB.tx('readwrite', s=>{ s.put(row); }); },
+  get(id){ return RepDB.tx('readonly', s=>s.get(id)); },
+  del(id){ return RepDB.tx('readwrite', s=>{ s.delete(id); }); },
+  clear(){ return RepDB.tx('readwrite', s=>{ s.clear(); }); },
+  list(){ return RepDB.tx('readonly', s=>s.getAll()).then(rows=>(rows||[]).map(r=>({id:r.id, ts:r.ts, size:(r.z ? r.z.byteLength : (r.s||'').length)}))); }
+};
+async function repPack(json){
+  try{
+    if(typeof CompressionStream!=='undefined'){
+      const cs = new CompressionStream('gzip'), w = cs.writable.getWriter();
+      w.write(new TextEncoder().encode(json)); w.close();
+      return {z:new Uint8Array(await new Response(cs.readable).arrayBuffer())};
+    }
+  }catch(e){}
+  return {s:json};
+}
+async function repUnpack(row){
+  if(row.s!==undefined) return row.s;
+  const ds = new DecompressionStream('gzip'), w = ds.writable.getWriter();
+  w.write(row.z); w.close();
+  return await new Response(ds.readable).text();
+}
+
+/* ---------------- the viewer ---------------- */
+const REP_SPEEDS = [0.5, 1, 2, 4, 8];
+const Replay = {
+  keys:new Set(),
+  keyOf(ts, n){ return ts+'-'+n; },
+  has(g){ return Replay.keys.has(Replay.keyOf(g.ts, g.n)); },
+  async init(){
+    try{ (await RepDB.list()).forEach(r=>Replay.keys.add(r.id)); }catch(e){}
+  },
+  async save(rec, me){
+    try{
+      const id = Replay.keyOf(rec.ts, rec.n);
+      const packed = await repPack(JSON.stringify(rec));
+      await RepDB.put(Object.assign({id, ts:rec.ts, me:me||0}, packed));
+      Replay.keys.add(id);
+      const all = (await RepDB.list()).sort((a,b)=>b.ts-a.ts);
+      for(const r of all.slice(REP_MAX)){ await RepDB.del(r.id); Replay.keys.delete(r.id); }
+    }catch(e){}
+  },
+  async remove(id){ try{ await RepDB.del(id); }catch(e){} Replay.keys.delete(id); },
+  async clearAll(){ try{ await RepDB.clear(); }catch(e){} Replay.keys.clear(); },
+
+  /* ----- decoding ----- */
+  dec(n){
+    const rec = Client.replay.rec;
+    const i = n % 200, m = Math.floor(n/200), j = m % 14, r = Math.floor(m/14);
+    const d = rec.deck[i];
+    return {uid:'c'+i, rank:j ? RANKS[j-1] : d[0], suit:d[1], wasJolly:!!j, restored:!!r};
+  },
+  decEv(e){
+    const o = Object.assign({}, e);
+    ['card','cards','shown','oldTop'].forEach(k=>{
+      if(!(k in o)) return;
+      const v = o[k];
+      o[k] = Array.isArray(v) ? v.map(Replay.dec) : (typeof v==='number' ? Replay.dec(v) : v);
+    });
+    return o;
+  },
+  /* every position of the game, and the diary as it was at that point */
+  build(rec){
+    const S = [rec.init], L = [(rec.l0||[]).slice().reverse()];
+    rec.st.forEach(s=>{
+      S.push(s.d ? Object.assign({}, S[S.length-1], s.d) : S[S.length-1]);
+      L.push((s.L||[]).slice().reverse().concat(L[L.length-1]).slice(0, 60));
+    });
+    return {S, L};
+  },
+  view(i){
+    const rp = Client.replay, rec = rp.rec, S = rp.S[i], pid = rp.viewer;
+    const players = rec.pl.map((p, k)=>{
+      const fin = S.fo.indexOf(k);
+      return {
+        id:k, name:p.n, kind:p.k==='b' ? 'bot' : 'human', avatar:p.a, elem:p.e, color:p.c,
+        connected:true, finished:fin>=0, ready:true, auto:false, place:fin+1,
+        hand: k===pid ? S['h'+k].map(Replay.dec) : {length:S['h'+k].length},
+        slots: S['s'+k].map(x=>({down: x[0]>=0 ? {uid:'c'+(x[0]%200), hidden:true} : null, up: x[1]>=0 ? Replay.dec(x[1]) : null})),
+        st:newStats()
+      };
+    });
+    return {
+      me:pid, phase:S.ph, turn:S.tu, players,
+      drawPile:{length:S.dn}, table:S.t.map(Replay.dec), sboboz:S.sb.map(Replay.dec), superSboboz:{length:S.sp.length},
+      constraint:S.cn, suppressNext:!!S.su, sbobozThreshold:rec.th, numDecks:rec.nd, hasJolly:!!rec.hj,
+      pendingPid:S.pd, draw:null, drawOk:false, rep:0, log:rp.L[i], seq:i
+    };
+  },
+
+  /* ----- opening / closing ----- */
+  async open(id){
+    let rec = null, me = 0;
+    try{
+      const row = await RepDB.get(id);
+      if(!row) throw 0;
+      rec = JSON.parse(await repUnpack(row)); me = row.me || 0;
+    }catch(e){ UI.toastTop('Replay non disponibile'); return; }
+    const {S, L} = Replay.build(rec);
+    Client.reset();
+    Client.replay = {rec, S, L, idx:0, viewer:Math.max(0, Math.min(me, rec.n-1)), playing:false, speed:1, tok:0, loop:false};
+    document.documentElement.classList.add('replaying');
+    Replay.buildBar();
+    Replay.measure();
+    Replay.hard(0);
+    setTimeout(()=>{ Replay.measure(); try{ fitLayout(); }catch(e){} }, 60);
+  },
+  close(){
+    const rp = Client.replay; if(!rp) return;
+    rp.playing = false; rp.tok++;
+    Client.replay = null;
+    ANIM_SCALE = 1;
+    Client.reset();
+    const fl = document.getElementById('fx-layer'); if(fl) fl.innerHTML = '';
+    document.documentElement.classList.remove('replaying');
+    document.documentElement.style.removeProperty('--rp-h');
+    document.getElementById('replay-bar').style.display = 'none';
+    try{ renderStats(SF.tab); }catch(e){}
+    UI.show('stats');
+  },
+  measure(){
+    const bar = document.getElementById('replay-bar');
+    bar.style.display = 'block';
+    document.documentElement.style.setProperty('--rp-h', bar.offsetHeight + 'px');
+  },
+
+  /* ----- moving around ----- */
+  hard(i){
+    const rp = Client.replay; if(!rp) return;
+    rp.tok++;
+    i = Math.max(0, Math.min(rp.S.length-1, i));
+    rp.idx = i;
+    Client.reset();
+    Client.onBatch({t:'batch', seq:i, events:[], view:Replay.view(i), full:true});
+    Replay.sync();
+  },
+  async stepTo(i, animate){
+    const rp = Client.replay; if(!rp) return false;
+    const tok = rp.tok;
+    rp.idx = i;
+    const evs = animate ? (rp.rec.st[i-1].e||[]).map(Replay.decEv) : [];
+    Client.onBatch({t:'batch', seq:i, events:evs, view:Replay.view(i), full:false});
+    Replay.sync();
+    await new Promise(r=>Client.whenIdle(r));
+    return rp.tok===tok;
+  },
+  gap(){ const s = Client.replay.speed; return s<=0.5 ? 1500 : s<=1 ? 800 : s<=2 ? 380 : s<=4 ? 260 : 130; },
+  async play(){
+    const rp = Client.replay; if(!rp || rp.loop) return;
+    if(rp.idx>=rp.S.length-1) Replay.hard(0);
+    rp.playing = true; rp.loop = true; Replay.sync();
+    while(rp.playing && Client.replay===rp && rp.idx<rp.S.length-1){
+      ANIM_SCALE = rp.speed>=2 ? 0.5 : (rp.speed<1 ? 1.4 : 1);
+      const tok = rp.tok;
+      const ok = await Replay.stepTo(rp.idx+1, rp.speed<4);
+      if(!ok || tok!==rp.tok) break;
+      await new Promise(r=>setTimeout(r, Replay.gap()));
+      if(tok!==rp.tok) break;
+    }
+    rp.loop = false;
+    if(Client.replay===rp && rp.idx>=rp.S.length-1) rp.playing = false;
+    Replay.sync();
+  },
+  pause(){ const rp = Client.replay; if(!rp) return; rp.playing = false; rp.tok++; rp.loop = false; Replay.sync(); },
+  setSpeed(d){
+    const rp = Client.replay; if(!rp) return;
+    const k = Math.max(0, Math.min(REP_SPEEDS.length-1, REP_SPEEDS.indexOf(rp.speed) + d));
+    rp.speed = REP_SPEEDS[k]; Replay.sync();
+  },
+  setViewer(pid){
+    const rp = Client.replay; if(!rp) return;
+    const was = rp.playing;
+    rp.viewer = pid;
+    Replay.hard(rp.idx);
+    if(was) Replay.play();
+  },
+
+  /* ----- the control bar ----- */
+  buildBar(){
+    const rp = Client.replay, N = rp.S.length-1;
+    const range = document.getElementById('rp-range');
+    range.max = N; range.value = 0;
+    const marks = document.getElementById('rp-marks');
+    marks.innerHTML = '';
+    rp.rec.st.forEach((s, k)=>{
+      const evs = s.e || [];
+      const kind = evs.some(e=>e.t==='sboboz') ? 'sb' : evs.some(e=>e.t==='finish') ? 'fn' : '';
+      if(!kind) return;
+      const m = document.createElement('i');
+      m.className = kind; m.style.left = ((k+1)/N*100) + '%';
+      marks.appendChild(m);
+    });
+  },
+  sync(){
+    const rp = Client.replay; if(!rp) return;
+    const N = rp.S.length-1;
+    const range = document.getElementById('rp-range');
+    if(+range.value!==rp.idx) range.value = rp.idx;
+    document.getElementById('rp-step').textContent = 'Mossa ' + rp.idx + ' / ' + N;
+    document.getElementById('rp-sp').textContent = (rp.speed<1 ? '½' : rp.speed) + '×';
+    document.getElementById('rp-play').innerHTML = rp.playing ? REP_ICON.pause : REP_ICON.play;
+    document.getElementById('rp-play').setAttribute('aria-label', rp.playing ? 'Pausa' : 'Riproduci');
+    const p = rp.rec.pl[rp.viewer];
+    document.getElementById('rp-view').innerHTML = '<span class="rp-ava">' + esc((p.a||'🥷')) + '</span><span class="rp-vn">' + esc(p.n) + '</span>';
+  },
+  chooseViewer(){
+    const rp = Client.replay; if(!rp) return;
+    Modal.choice('Punto di vista', 'Da chi vuoi vedere la partita? Vedrai le sue carte in mano.',
+      rp.rec.pl.map((p, k)=>[(p.a||'🥷') + ' ' + p.n + (k===rp.viewer ? '  ✓' : ''), String(k)]),
+      v=>{ if(v!==undefined && v!==null) Replay.setViewer(parseInt(v,10)); });
+  }
+};
+const REP_ICON = {
+  play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>',
+  pause:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>'
+};
+(function(){
+  const $ = id=>document.getElementById(id);
+  const on = (id, fn)=>{ const e = $(id); if(e) e.addEventListener('click', fn); };
+  on('rp-exit', ()=>Replay.close());
+  on('rp-start', ()=>{ Replay.pause(); Replay.hard(0); });
+  on('rp-end', ()=>{ Replay.pause(); if(Client.replay) Replay.hard(Client.replay.S.length-1); });
+  on('rp-prev', ()=>{ if(!Client.replay) return; Replay.pause(); Replay.hard(Client.replay.idx-1); });
+  on('rp-next', ()=>{ const rp = Client.replay; if(!rp) return; Replay.pause(); if(rp.idx<rp.S.length-1) Replay.stepTo(rp.idx+1, true); });
+  on('rp-play', ()=>{ const rp = Client.replay; if(!rp) return; if(rp.playing) Replay.pause(); else Replay.play(); });
+  on('rp-slow', ()=>Replay.setSpeed(-1));
+  on('rp-fast', ()=>Replay.setSpeed(1));
+  on('rp-view', ()=>Replay.chooseViewer());
+  const range = $('rp-range');
+  if(range){
+    let raf = 0;
+    range.addEventListener('input', ()=>{
+      if(!Client.replay) return;
+      const v = parseInt(range.value,10);
+      Replay.pause();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(()=>{ if(Client.replay) Replay.hard(v); });
+    });
+  }
+  document.addEventListener('keydown', e=>{
+    const rp = Client.replay; if(!rp) return;
+    const mo = document.getElementById('modal-overlay'); if(mo && mo.style.display==='flex') return;
+    if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName) && e.target.type!=='range') return;
+    if(e.key===' ' || e.key==='k'){ e.preventDefault(); if(rp.playing) Replay.pause(); else Replay.play(); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); Replay.pause(); Replay.hard(rp.idx+1); }
+    else if(e.key==='ArrowLeft'){ e.preventDefault(); Replay.pause(); Replay.hard(rp.idx-1); }
+    else if(e.key==='Home'){ Replay.pause(); Replay.hard(0); }
+    else if(e.key==='End'){ Replay.pause(); Replay.hard(rp.S.length-1); }
+  });
+  window.addEventListener('resize', ()=>{ if(Client.replay) setTimeout(()=>Replay.measure(), 80); });
+})();
 
 /* ============================================================
    PARTY CEREMONY (every device plays it from the host's final data)
@@ -6943,7 +7376,7 @@ function gameCard(g){
   const tag = (g.ai ? 'con bot al tuo posto · fuori dalle statistiche' + ((g.draw||g.stale||g.pty)?' · ':'') : '') + (g.draw ? '🤝 patta' : g.stale ? 'stallo' : '') + (g.pty ? ((g.draw||g.stale)?' · ':'') + `🎉 party ${g.pty.k}/${g.pty.total}` : '');
   let h = `<div class="game ${open?'open':''}" data-id="${esc(g.id)}">
     <button class="game-head" data-toggle="${esc(g.id)}">
-      <span class="g-when">${when}<small>${g.n} giocatori · ${g.online?'online':'contro bot'}${tag?' · '+tag:''}</small></span>
+      <span class="g-when">${when}<small>${g.n} giocatori · ${g.online?'online':'contro bot'}${tag?' · '+tag:''}${Replay.has(g)?' · ▶ replay':''}</small></span>
       <span class="g-place ${win?'win':''}">${me.t?'Pari':me.pl+'°'}${win?' 🏆':''}</span><span class="g-chev">▾</span>
     </button>`;
   if(open){
@@ -6956,6 +7389,7 @@ function gameCard(g){
         return `<div class="g-row ${r.me?'me':''}"><span class="g-pl">${r.pl}°${r.t?'=':''}</span><span class="g-nm">${esc(r.me?'Tu':r.w)}${r.k==='b'?' <small>bot</small>':''}</span>
           <span class="g-st"><i title="carte giocate">🎴${st.played||0}</i><i title="tavoli presi">📥${st.pickups||0}</i><i title="sboboz con carte">💥${st.sbobozCards||0}</i><i title="sboboz con Re">👑${st.sbobozKings||0}</i><i title="mano massima">✋${st.maxHand||0}</i></span></div>`;
       }).join('')}</div>`}
+      ${(!g.legacy && Replay.has(g)) ? `<button class="btn-primary g-replay" data-replay="${esc(Replay.keyOf(g.ts, g.n))}">${REP_ICON.play} Rivedi la partita</button>` : ''}
       <button class="btn-secondary danger g-del" data-del="${esc(g.id)}">Elimina questa partita</button>
     </div>`;
   }
@@ -7106,6 +7540,7 @@ function wireStats(){
       if(v==='y'){ Store.removeParty(b.dataset.delp); SF.open = null; renderStats(); UI.toastTop('Party eliminato'); }
     });
   });
+  document.querySelectorAll('#stats-body [data-replay]').forEach(b=>{ b.onclick = ()=>Replay.open(b.dataset.replay); });
   document.querySelectorAll('#stats-body [data-del]').forEach(b=>{
     b.onclick = ()=>Modal.choice('Eliminare la partita?', 'Sparisce dallo storico e da tutte le statistiche. Non si può annullare.', [['Elimina','y'],['Annulla','n']], v=>{
       if(v==='y'){ Store.remove(b.dataset.del); SF.open = null; renderStats(); UI.toastTop('Partita eliminata'); }
@@ -7138,6 +7573,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.5.0', major:true, d:'2026-11-06', title:'Replay delle partite', items:['Ogni partita viene registrata e si può rivedere','Slider, velocità e punto di vista di ogni giocatore']},
   {v:'1.4.6', d:'2026-11-03'},
   {v:'1.4.5', d:'2026-11-01'},
   {v:'1.4.4', d:'2026-11-01'},
@@ -8097,6 +8533,8 @@ function wireUp(){
   $('side-overlay').onclick = ()=>openMenu(false);
   $('side-menu').querySelectorAll('.sm-item').forEach(b=>b.addEventListener('click', ()=>openMenu(false)));
   $('sm-stats').onclick = ()=>$('btn-stats').click();
+  if($('sm-rexit')) $('sm-rexit').onclick = ()=>Replay.close();
+  Replay.init().then(()=>{ try{ if(UI.current==='stats') renderStats(SF.tab); }catch(e){} });
   $('sm-rules').onclick = showRules;
   initSettings();
   const toggleAuto = ()=>{ const me = Client.V && Client.V.players[Client.V.me]; if(!me) return; sendToHost({t:'auto', v:!me.auto}); };
@@ -8209,7 +8647,7 @@ updateFullscreenButtons();
   }catch(e){}
 })();
 
-window.__dbg={selectAllInfo,sbobozNeedsJolly,myPlayer,canMakeSboboz,sbobozCap,currentTopStreak,cardHtml,flyClone,showResults,resultsVisible,renderResultsActions,Fx,icon,Party,PartyShow,Eng:{aiStep,resolvePendingByAI,initGame,aiChooseFaceUp,skipToEnd,buildResults,aiPlayHand,aiPlayFaceUp,currentZone,resolvePlay,pickUpTable,checkAutoSboboz,applyEffect,log},isLegalRank,hasEffectContextual,hasAnyLegalInHand,humanAction,render,R,Client,UI,Store,Host,Room,Guest,Modal,heldClones,get G(){return G;}};
+window.__dbg={selectAllInfo,sbobozNeedsJolly,myPlayer,canMakeSboboz,sbobozCap,currentTopStreak,cardHtml,flyClone,showResults,resultsVisible,renderResultsActions,Fx,icon,Party,PartyShow,Eng:{aiStep,resolvePendingByAI,initGame,aiChooseFaceUp,skipToEnd,buildResults,aiPlayHand,aiPlayFaceUp,currentZone,resolvePlay,pickUpTable,checkAutoSboboz,applyEffect,log},isLegalRank,hasEffectContextual,hasAnyLegalInHand,humanAction,render,R,Client,UI,Store,Host,Room,Guest,Modal,heldClones,Replay,Rec,RepDB,get G(){return G;}};
 
 })();
 </script>
