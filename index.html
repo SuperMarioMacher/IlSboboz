@@ -1756,8 +1756,7 @@ html.replaying #react-btn, html.replaying #btn-react, html.replaying #auto-bar{ 
 .rp-btns button svg{ width:20px; height:20px; }
 .rp-btns button.main{ width:58px; background:var(--gold-bright); color:#1a1204; border-color:var(--gold-bright); }
 .rp-btns button.main svg{ width:24px; height:24px; }
-.rp-btns button.rp-small{ width:36px; height:36px; margin-right:8px; color:#ef7f72; border-color:rgba(229,72,59,.5); }
-.rp-btns button.rp-small svg{ width:16px; height:16px; }
+.rp-btns button.rp-small{ width:36px; height:36px; margin-right:8px; font-size:1.05rem; }
 .g-replay{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin:8px 0 4px; }
 .g-replay svg{ width:18px; height:18px; }
 /* landscape phones: the whole bar on one line */
@@ -1770,6 +1769,14 @@ html.land .rp-btns button{ width:34px; height:34px; } html.land .rp-btns button.
 html.land .rp-viewer{ max-width:130px; height:30px; }
 @media (min-width:900px){ #replay-bar{ padding:10px max(24px, calc((100vw - 760px)/2)) 12px; } }
 #rp-marks i.pk{ background:#ff5a4d; }
+/* 1.5.2 */
+html.replaying #btn-pickup, html.replaying #action-msg{ display:none !important; }
+#rp-marks{ z-index:1; } #rp-range{ position:relative; z-index:2; }
+.rp-ava.bot{ background:var(--c); color:#000; font-family:'Chillax','Fraunces',sans-serif; font-weight:700; font-size:.8rem; }
+.rp-ava.bot[style*="#000000"]{ color:#fff3e0; }
+.rp-viewer small{ opacity:.7; font-size:.72em; }
+.rp-btns button.rp-x{ margin-right:0; margin-left:8px; color:#ef7f72; border-color:rgba(229,72,59,.5); }
+.rp-btns button.rp-x svg{ width:16px; height:16px; }
 
 </style>
 </head>
@@ -1978,11 +1985,13 @@ html.land .rp-viewer{ max-width:130px; height:30px; }
   <div class="rp-top"><span id="rp-step">Mossa 0 / 0</span><span class="rp-speed"><button type="button" id="rp-slow" aria-label="Più lento">−</button><b id="rp-sp">1×</b><button type="button" id="rp-fast" aria-label="Più veloce">+</button></span><button type="button" id="rp-view" class="rp-viewer" aria-label="Punto di vista"></button></div>
   <div class="rp-slider"><div id="rp-marks"></div><input type="range" id="rp-range" min="0" max="0" value="0" aria-label="Posizione nella partita"></div>
   <div class="rp-btns">
+    <button type="button" id="rp-mode" class="rp-small" aria-label="Momenti chiave"></button>
     <button type="button" id="rp-start" aria-label="All'inizio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M19 5.5v13L9 12z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg></button>
     <button type="button" id="rp-prev" aria-label="Mossa precedente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5.5v13L7 12z" fill="currentColor"/></svg></button>
     <button type="button" id="rp-play" class="main" aria-label="Riproduci"></button>
     <button type="button" id="rp-next" aria-label="Mossa successiva"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5v13L17 12z" fill="currentColor"/></svg></button>
     <button type="button" id="rp-end" aria-label="Alla fine"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M5 5.5v13L15 12z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg></button>
+    <button type="button" id="rp-exit" class="rp-small rp-x" aria-label="Esci dal replay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
   </div>
 </div>
 <div id="side-overlay"></div>
@@ -2027,8 +2036,8 @@ html.land .rp-viewer{ max-width:130px; height:30px; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.5.1',   // mostrata in fondo alla home
-  buildTime: '2026-11-06T09:01',   // data e ora di creazione di questo file (per le novità)
+  version: '1.5.2',   // mostrata in fondo alla home
+  buildTime: '2026-11-06T09:30',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -5915,6 +5924,10 @@ function playNeedsConfirm(V, p, cards){
   return null;
 }
 
+/* replay: whoever is being watched is on the move, so the graphic aids show on their cards (display only) */
+function replayAids(V, p){ return !!(Client.replay && V.phase==='play' && V.turn===V.me && !p.finished && V.pendingPid<0); }
+/* a face-up card plays alone: it makes a sboboz when it is the last one missing on the table */
+function faceupSboboz(V, c){ return c.rank!=='JOLLY' && V.table.length>0 && V.table[V.table.length-1].rank===c.rank && sbobozCap(V, c.rank)===1; }
 function renderHumanStacks(){
   const V = Client.V, p = myPlayer();
   const zone = V.phase==='play' ? currentZone(p) : 'setup';
@@ -5944,9 +5957,14 @@ function renderHumanStacks(){
         if(aidOn('aidDim') && !cardUsable(V, p, slot.up, 'faceup')){ el.classList.add('dim'); el.onclick = clearSelectionTap; }
         else {
           el.classList.add('selectable');
+          if(aidOn('aidSb') && faceupSboboz(V, slot.up)) el.classList.add('sb-hint');
           if(Client.sel.includes(slot.up.uid)) el.classList.add('selected');
           el.onclick = ()=>toggleSelection(slot.up,'faceup');
         }
+      }
+      else if(replayAids(V,p) && zone==='faceup'){
+        if(aidOn('aidDim') && !cardUsable(V, p, slot.up, 'faceup')) el.classList.add('dim');
+        else if(aidOn('aidSb') && faceupSboboz(V, slot.up)) el.classList.add('sb-hint');
       }
       stackEl.appendChild(el);
     } else if(slot.down){
@@ -5986,6 +6004,9 @@ function renderHuman(){
         el.onclick = ()=>toggleSelection(c,'hand');
         if(aidOn('aidSb') && (c.rank==='JOLLY' ? RANKS.some(r=>sbobozNeedsJolly(V, p, r)) : canMakeSboboz(V, p, c.rank))) el.classList.add('sb-hint');
       }
+    } else if(replayAids(V,p) && zone==='hand'){
+      if(aidOn('aidDim') && !cardUsable(V, p, c, 'hand')) el.classList.add('dim');
+      else if(aidOn('aidSb') && (c.rank==='JOLLY' ? RANKS.some(r=>sbobozNeedsJolly(V, p, r)) : canMakeSboboz(V, p, c.rank))) el.classList.add('sb-hint');
     }
     hd.appendChild(el);
   });
@@ -6735,25 +6756,36 @@ const Replay = {
     const rp = Client.replay; if(!rp) return;
     const was = rp.playing;
     rp.viewer = pid;
+    Replay.buildBar(true);
     Replay.hard(rp.idx);
     if(was) Replay.play();
   },
 
   /* ----- the control bar ----- */
-  buildBar(){
+  buildBar(keep){
     const rp = Client.replay, N = rp.S.length-1;
     const range = document.getElementById('rp-range');
-    range.max = N; range.value = 0;
+    range.max = N; if(!keep) range.value = 0;
     const marks = document.getElementById('rp-marks');
     marks.innerHTML = '';
+    const mine = !!rp.mineOnly, me = rp.viewer;
     rp.rec.st.forEach((s, k)=>{
       const evs = s.e || [];
-      const kind = evs.some(e=>e.t==='sboboz') ? 'sb' : evs.some(e=>e.t==='finish') ? 'fn' : evs.some(e=>e.t==='pickup') ? 'pk' : '';
+      const actor = rp.S[k].tu;                          // who was on the move before this step
+      const own = e=>!mine || (e.t==='sboboz' ? actor===me : e.pid===me);
+      const kind = evs.some(e=>e.t==='sboboz' && own(e)) ? 'sb' : evs.some(e=>e.t==='finish' && own(e)) ? 'fn' : evs.some(e=>e.t==='pickup' && own(e)) ? 'pk' : '';
       if(!kind) return;
       const m = document.createElement('i');
       m.className = kind; m.style.left = ((k+1)/N*100) + '%';
       marks.appendChild(m);
     });
+    const mb = document.getElementById('rp-mode');
+    if(mb){
+      const p = rp.rec.pl[me];
+      mb.textContent = mine ? '👤' : '👥';
+      mb.title = mine ? 'Momenti chiave: solo di ' + p.n : 'Momenti chiave: di tutti';
+      mb.setAttribute('aria-label', mb.title);
+    }
   },
   sync(){
     const rp = Client.replay; if(!rp) return;
@@ -6765,12 +6797,14 @@ const Replay = {
     document.getElementById('rp-play').innerHTML = rp.playing ? REP_ICON.pause : REP_ICON.play;
     document.getElementById('rp-play').setAttribute('aria-label', rp.playing ? 'Pausa' : 'Riproduci');
     const p = rp.rec.pl[rp.viewer];
-    document.getElementById('rp-view').innerHTML = '<span class="rp-ava">' + esc((p.a||'🥷')) + '</span><span class="rp-vn">' + esc(p.n) + '</span>';
+    const isBot = p.k==='b';
+    const ava = (isBot && p.c && p.a!=='🎲') ? '<span class="rp-ava bot" style="--c:'+esc(fixColor(p.c))+'">'+esc((p.n||'N')[0])+'</span>' : '<span class="rp-ava">'+esc(p.a||'🥷')+'</span>';
+    document.getElementById('rp-view').innerHTML = ava + '<span class="rp-vn">' + esc(p.n) + (isBot ? ' <small>(bot)</small>' : '') + '</span>';
   },
   chooseViewer(){
     const rp = Client.replay; if(!rp) return;
     Modal.choice('Punto di vista', 'Da chi vuoi vedere la partita? Vedrai le sue carte in mano.',
-      rp.rec.pl.map((p, k)=>[(p.a||'🥷') + ' ' + p.n + (k===rp.viewer ? '  ✓' : ''), String(k)]),
+      rp.rec.pl.map((p, k)=>[(p.k==='b' ? '🤖' : (p.a||'🥷')) + ' ' + p.n + (p.k==='b' ? ' (bot)' : '') + (k===rp.viewer ? '  ✓' : ''), String(k)]),
       v=>{ if(v!==undefined && v!==null) Replay.setViewer(parseInt(v,10)); });
   }
 };
@@ -6788,7 +6822,9 @@ const REP_ICON = {
   on('rp-play', ()=>{ const rp = Client.replay; if(!rp) return; if(rp.playing) Replay.pause(); else Replay.play(); });
   on('rp-slow', ()=>Replay.setSpeed(-1));
   on('rp-fast', ()=>Replay.setSpeed(1));
+  on('rp-exit', ()=>Replay.close());
   on('rp-view', ()=>Replay.chooseViewer());
+  on('rp-mode', ()=>{ const rp = Client.replay; if(!rp) return; rp.mineOnly = !rp.mineOnly; Replay.buildBar(true); });
   const range = $('rp-range');
   if(range){
     let raf = 0;
@@ -7578,6 +7614,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.5.2', d:'2026-11-06', title:'Replay: momenti chiave e aiuti', items:['Momenti chiave di tutti o solo del giocatore guardato','Bot riconoscibili (avatar e scritta bot) nei replay','Aiuti grafici (carte spente, sboboz) visibili nei replay','Meno spazio vuoto sotto le carte']},
   {v:'1.5.1', d:'2026-11-06', title:'Sistemazioni replay', items:['Anche i bot mostrano i 2 e il jolly in fondo alle scoperte','Replay: tolto il tasto X e la scritta sotto le carte','Replay: segni rossi quando qualcuno pesca il tavolo','Replay: salta partita ora si può rivedere per intero']},
   {v:'1.5.0', major:true, d:'2026-11-06', title:'Replay delle partite', items:['Ogni partita viene registrata e si può rivedere','Slider, velocità e punto di vista di ogni giocatore']},
   {v:'1.4.6', d:'2026-11-03'},
