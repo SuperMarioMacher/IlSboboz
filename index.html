@@ -1807,6 +1807,9 @@ html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
 .s-name.tap-bot:hover, .opp-name.tap-bot:hover{ text-decoration:underline dotted; text-underline-offset:3px; }
 #auto-bar .auto-btns{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
 #auto-bar .auto-btns button{ pointer-events:auto; }
+.bi-h{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:4px 10px; margin:0 0 6px !important; }
+.bi-h .bi-t{ flex:0 0 100%; text-align:center; margin-top:0; }
+.bi-h .s-ava{ flex:0 0 auto; margin:0; }
 
 </style>
 </head>
@@ -2066,8 +2069,8 @@ html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.6.1',   // mostrata in fondo alla home
-  buildTime: '2026-11-07T09:17',   // data e ora di creazione di questo file (per le novità)
+  version: '1.6.2',   // mostrata in fondo alla home
+  buildTime: '2026-11-07T09:53',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -3376,7 +3379,7 @@ const BOT_PERSONAS = {
   Jay:{ key:'Jay', title:'Il simpaticone',
     desc:'Il burlone del gruppo, gli piace fare spettacolo: riporta in tavola le carte dello sboboz con i 3, col J pesca carte che non ti aspetti e ogni tanto si inventa una mossa strana. Ma se sta perdendo davvero smette di scherzare. Se il gioco si blocca cerca di sbloccarlo.',
     mem:0.55, blunder:0.07, stale:'avoid', rel:{Nya:2, Cole:1, Kai:-1} },
-  Lloyd:{ key:'Lloyd', title:'Il normale',
+  Lloyd:{ key:'Lloyd', title:'L’equilibrato',
     desc:'Il più equilibrato: gioca pulito e senza colpi di scena. Ricorda buona parte delle carte uscite, anche se qualcuna gli sfugge, e non fa né favori né dispetti. Se la partita rischia di bloccarsi preferisce sbloccarla.',
     mem:0.75, blunder:0.06, stale:'avoid', rel:{} },
   Nya:{ key:'Nya', title:'La competitiva',
@@ -3396,7 +3399,7 @@ function moodText(name, v){
     `È arrabbiat${f?'a':'o'} con te: quando può ti ostacola.`,
     `Non ha niente contro di te, né favori da farti: ti tratta come tutti gli altri.`,
     `È content${f?'a':'o'} di te: quando può ti dà una mano.`,
-    `Ti adora: appena può ti toglie dai guai.`
+    `È felice di giocare con te: appena può ti toglie dai guai.`
   ][L+2];
 }
 const BOT_ORDER = ['Zane','Cole','Jay','Lloyd','Nya','Kai'];
@@ -3405,7 +3408,7 @@ const BOT_NEUTRAL = { key:'', title:'', desc:'', mem:0.75, blunder:0.06, stale:'
 
 const Bots = (function(){
   /* tunable numbers (they were found by playing thousands of simulated games) */
-  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opU:0.22, opK:0.22, opS:0.10, opTh:0.3, opBias:0.14, nyaMean:3.0, samples:0, top:4, zthr:1.0};
+  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opU:0.22, opK:0.22, opS:0.10, opTh:0.3, opBias:0.14, kaiBl:0.30, kaiMem:0.65, opO:0.05, opP:0.012, nyaMean:3.0, samples:0, top:4, zthr:1.0};
   const rv = r=>rankValue(r);
   const clamp = (x,a,b)=>Math.max(a, Math.min(b, x));
 
@@ -3447,7 +3450,7 @@ const Bots = (function(){
      The roll is made once per card, so a bot does not change its mind from one move to the next. */
   function memQ(p, per, rage){
     let q = per.mem;
-    if(per.key==='Kai') q = q*(1 - 0.65*rage);
+    if(per.key==='Kai') q = q*(1 - P.kaiMem*rage);
     return clamp(q, 0.05, 1);
   }
   function buildMind(p, per, rage){
@@ -3491,7 +3494,7 @@ const Bots = (function(){
     G.players.forEach(q=>{ c.adv[q.id] = advantage(q); });
     c.mind = buildMind(p, per, rage);
     c.t = nextActive(p);
-    c.blunder = per.blunder + (per.key==='Kai' ? 0.30*rage : 0);
+    c.blunder = per.blunder + (per.key==='Kai' ? P.kaiBl*rage : 0);
     return c;
   }
 
@@ -3990,9 +3993,9 @@ const Bots = (function(){
       const t = nextActive(actor);
       if(t===actor || t.kind!=='bot') return;
       const list = actor.hand.length>0 ? handCands(actor) : faceCands(actor);
-      if(list.length<2 || G.table.length<3) return;
-      const cj = {p:actor, per:{perfect:true, key:'', mem:1}, mind:buildMind(actor, {perfect:true, mem:1, key:''}, 0)};
       const by = {}; let sbAvail = false;
+      if(list.length<2 || G.table.length<3){ G.moveInfo = {a:actor.id, t:t.id, by, sbAvail, m:G.table.length}; return; }
+      const cj = {p:actor, per:{perfect:true, key:'', mem:1}, mind:buildMind(actor, {perfect:true, mem:1, key:''}, 0)};
       list.forEach(k=>{
         if(after(actor, k).sb){ sbAvail = true; }
         const v = judgePain(actor, k, t, cj); if(v===null) return;
@@ -4034,6 +4037,18 @@ const Bots = (function(){
         const pr = predOf(S, t);
         const stuck = !t.hand.some(x=>pr(x.rank==='JOLLY' ? '2' : x.rank)) && (t.hand.length>0 || !t.slots.some(s=>s.up && pr(s.up.rank==='JOLLY' ? '2' : s.up.rank)));
         if(stuck) d = -P.opS;
+      }
+      // without any bad intention: a move that leaves me stuck with the table makes me a little angrier, one that does not, a little happier
+      {
+        const m = mi.m, top = topOfTable(G);
+        let stuckNow = false;
+        if(G.table.length>0 && top){
+          const S2 = {table:[{rank:top.rank}], constraint:G.constraint, sboboz:G.sboboz, superSboboz:G.superSboboz, sbobozThreshold:G.sbobozThreshold};
+          const pr2 = predOf(S2, t);
+          stuckNow = !t.hand.some(x=>pr2(x.rank==='JOLLY' ? '2' : x.rank)) && (t.hand.length>0 || !t.slots.some(s=>s.up && pr2(s.up.rank==='JOLLY' ? '2' : s.up.rank)));
+        }
+        if(stuckNow) d -= P.opO*Math.min(1.5, Math.max(0.4, G.table.length/8));
+        else if(m>=2) d += P.opP;
       }
       if(!d) return;
       const w = (actor.kind==='bot') ? 0.5 : 1;
@@ -4194,15 +4209,29 @@ const Store = {
     const json = JSON.stringify(this.data);
     try{ return 'ILSBOBOZ1:' + btoa(unescape(encodeURIComponent(json))); }catch(e){ return json; }
   },
-  importString(str){
-    str = (str||'').trim();
-    let json = str;
-    if(str.startsWith('ILSBOBOZ1:')){
-      try{ json = decodeURIComponent(escape(atob(str.slice(10)))); }catch(e){ return false; }
+  /* the code may arrive with spaces, line breaks, quotes, other text around it, or as plain JSON */
+  parseImport(str){
+    str = String(str||'');
+    const dec = b=>{ b = b.replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4) b += '='; return decodeURIComponent(escape(atob(b))); };
+    const okJson = j=>{ try{ const d = JSON.parse(j); return d && typeof d==='object' && (Array.isArray(d.games) || d.stats) ? d : null; }catch(e){ return null; } };
+    const at = str.indexOf('ILSBOBOZ1:');
+    if(at>=0){
+      // tokens after the prefix: the code can be split in lines and may be followed by other words
+      const tok = str.slice(at+10).split(/\s+/).filter(Boolean);
+      for(let n=tok.length; n>=Math.max(1, tok.length-6); n--){
+        const c = tok.slice(0,n).join('').replace(/^["'«“]+|["'»”.,;:]+$/g,'');
+        try{ const d = okJson(dec(c)); if(d) return d; }catch(e){}
+      }
+      return null;
     }
-    let d;
-    try{ d = JSON.parse(json); }catch(e){ return false; }
-    if(!d || typeof d!=='object' || !(Array.isArray(d.games) || d.stats)) return false;
+    const flat = str.replace(/\s+/g,'').replace(/^["'«“]+|["'»”]+$/g,'');
+    if(flat.length>40 && /^[A-Za-z0-9+\/_\-=]+$/.test(flat) && flat[0]!=='{'){ try{ const d = okJson(dec(flat)); if(d) return d; }catch(e){} }
+    const a = str.indexOf('{'), z = str.lastIndexOf('}');
+    if(a>=0 && z>a){ const d = okJson(str.slice(a, z+1)); if(d) return d; }
+    return null;
+  },
+  importString(str){
+    const d = this.parseImport(str); if(!d) return false;
     const keepId = this.data.clientId;
     this.data = this.merge(defaultProfile(), d);
     this.data.clientId = keepId;
@@ -8411,7 +8440,15 @@ function wireStats(){
       });
     };
   });
-  if($('st-export')) $('st-export').onclick = ()=>{ copyText(Store.exportString()); UI.toastTop('Codice copiato negli appunti'); };
+  if($('st-export')) $('st-export').onclick = ()=>{
+    const code = Store.exportString();
+    copyText(code).then(ok=>{
+      if(ok){ UI.toastTop('Codice copiato negli appunti'); return; }
+      // the clipboard refused: show the code so it can be copied by hand
+      Modal.open(`<h3>Codice delle statistiche</h3><p>Non sono riuscito a copiarlo da solo: tieni premuto sul testo, seleziona tutto e copia.</p><textarea id="exp-text" class="text-input" rows="5" readonly></textarea><div class="modal-btns"><button class="btn-primary" id="exp-ok">Ok</button></div>`, '', true);
+      $('exp-text').value = code; $('exp-text').onfocus = ()=>$('exp-text').select(); $('exp-ok').onclick = Modal.close;
+    });
+  };
   if($('st-download')) $('st-download').onclick = ()=>{
     const blob = new Blob([Store.exportString()], {type:'text/plain'});
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ilsboboz-statistiche.txt';
@@ -8438,6 +8475,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.6.2', d:'2026-11-07'},
   {v:'1.6.1', d:'2026-11-07'},
   {v:'1.6.0', major:true, d:'2026-11-06', title:'Personalità e miglioramento bot', items:['Ogni ninja ha il suo carattere, le sue amicizie e rivalità e potrà avere rancore o gratitudine nei confronti dei giocatori all’interno di una lobby','Autoplay: puoi scegliere lo stile di quale ninja usare']},
   {v:'1.5.4', d:'2026-11-06', title:'Replay senza effetti sul resto', items:['Uscendo dal replay dimensioni e layout tornano esattamente come prima','La scelta delle 5 scoperte si adatta sempre allo schermo']},
@@ -8931,15 +8969,21 @@ function qrSvg(text){
   }catch(e){ return '<div>QR non disponibile</div>'; }
 }
 
+/* copies text; resolves true/false (a promise-based clipboard can refuse without telling, so fall back to the old way) */
 function copyText(t){
+  const legacy = ()=>{
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); try{ ta.setSelectionRange(0, t.length); }catch(e){}
+    let ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+    ta.remove(); return ok;
+  };
   try{
-    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(t).then(()=>true, ()=>legacy());
+    }
   }catch(e){}
-  const ta = document.createElement('textarea');
-  ta.value = t; ta.style.position='fixed'; ta.style.opacity='0';
-  document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); }catch(e){}
-  ta.remove();
+  return Promise.resolve(legacy());
 }
 
 /* ============================================================
@@ -9484,12 +9528,20 @@ function moodFace(v){
     '-2':'<path d="M7.6 17.6c1.6-3 7.2-3 8.8 0" fill="none" stroke="#1d1a12" stroke-width="1.9" stroke-linecap="round"/><path d="M6 7.4l4.8 2.7M18 7.4l-4.8 2.7" stroke="#1d1a12" stroke-width="1.9" stroke-linecap="round"/>'}[L];
   return `<svg class="mface" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10.6" fill="${c}" stroke="#1d1a12" stroke-opacity=".55" stroke-width="1.2"/><circle cx="8.9" cy="11.2" r="1.45" fill="#1d1a12"/><circle cx="15.1" cy="11.2" r="1.45" fill="#1d1a12"/>${mouth}</svg>`;
 }
+/* what a relation level means: +1 great friends (Kai and Nya are brother and sister), +2 only Jay and Nya (a couple) */
+function relLabel(a, b, v){
+  const pair = [a,b].sort().join('+');
+  if(pair==='Kai+Nya') return b==='Kai' ? 'è suo fratello, vanno molto d’accordo' : 'è sua sorella, vanno molto d’accordo';
+  if(pair==='Jay+Nya') return 'stanno insieme';
+  if(v>=1) return 'sono grandi amici';
+  return 'ha qualche attrito';
+}
 /* the "i" / the face next to a bot's name: how that ninja plays and how it feels about you (live) */
 function showBotInfo(name, getMood){
   const per = BOT_PERSONAS[name]; if(!per) return;
   const lab = {2:'va molto d’accordo con lui/lei', 1:'va d’accordo', '-1':'ha qualche attrito'};
-  const rel = Object.keys(per.rel).sort((a,b)=>per.rel[b]-per.rel[a]).map(k=>`<li><b>${esc(k)}</b>: ${per.rel[k]===2 ? 'sono grandi amici' : per.rel[k]===1 ? 'va d’accordo' : 'ha qualche attrito'}</li>`).join('');
-  Modal.open(`<h3><span class="s-ava bot" style="--c:${botColor(name)}">${esc(name[0])}</span> ${esc(name)} <small class="bi-t">${esc(per.title)}</small></h3>
+  const rel = Object.keys(per.rel).sort((a,b)=>per.rel[b]-per.rel[a]).map(k=>`<li><b>${esc(k)}</b>: ${relLabel(name, k, per.rel[k])}</li>`).join('');
+  Modal.open(`<h3 class="bi-h"><span class="s-ava bot" style="--c:${botColor(name)}">${esc(name[0])}</span><span>${esc(name)}</span><small class="bi-t">${esc(per.title)}</small></h3>
     ${getMood ? `<div class="bi-mood"><span id="bm-face"></span><span id="bm-text"></span></div>` : ''}
     <p>${esc(per.desc)}</p>${rel ? `<div class="bi-rel">Con gli altri ninja:<ul>${rel}</ul><span>(con tutti gli altri è neutrale)</span></div>` : ''}
     <div class="modal-btns"><button class="btn-primary" id="bi-ok" type="button">Ok</button></div>`, '', ()=>{ Modal._mood = null; Modal.close(); });
