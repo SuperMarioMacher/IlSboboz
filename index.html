@@ -2070,7 +2070,7 @@ html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
   version: '1.6.2',   // mostrata in fondo alla home
-  buildTime: '2026-11-07T09:53',   // data e ora di creazione di questo file (per le novità)
+  buildTime: '2026-11-07T10:16',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -3408,7 +3408,7 @@ const BOT_NEUTRAL = { key:'', title:'', desc:'', mem:0.75, blunder:0.06, stale:'
 
 const Bots = (function(){
   /* tunable numbers (they were found by playing thousands of simulated games) */
-  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opU:0.22, opK:0.22, opS:0.10, opTh:0.3, opBias:0.14, kaiBl:0.30, kaiMem:0.65, opO:0.05, opP:0.012, nyaMean:3.0, samples:0, top:4, zthr:1.0};
+  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opU:0.35, opK:0.30, opS:0.10, opTh:0.3, opBias:0.16, kaiBl:0.30, kaiMem:0.65, opO:0.025, opP:0.003, nyaMean:3.0, samples:0, top:4, zthr:1.0};
   const rv = r=>rankValue(r);
   const clamp = (x,a,b)=>Math.max(a, Math.min(b, x));
 
@@ -4061,7 +4061,13 @@ const Bots = (function(){
     try{
       if(typeof R==='undefined' || !R) return;
       if(!R.botOpin) R.botOpin = {};
-      for(const a in R.botOpin){ const o = R.botOpin[a]; for(const b in o){ o[b] *= 0.92; if(Math.abs(o[b])<0.03) delete o[b]; } }
+      // a slow fading between games, but never enough to change the face a ninja shows (only what happens at the table does that)
+      const edge = {2:0.805, 1:0.305, '-1':-0.305, '-2':-0.805};
+      for(const a in R.botOpin){ const o = R.botOpin[a]; for(const b in o){
+        const v = o[b], L = moodLevel(v); let n = v*0.92;
+        if(moodLevel(n)!==L) n = L===0 ? n : edge[L];
+        o[b] = n; if(Math.abs(o[b])<0.03) delete o[b];
+      } }
     }catch(e){}
   }
 
@@ -9532,7 +9538,7 @@ function moodFace(v){
 function relLabel(a, b, v){
   const pair = [a,b].sort().join('+');
   if(pair==='Kai+Nya') return b==='Kai' ? 'è suo fratello, vanno molto d’accordo' : 'è sua sorella, vanno molto d’accordo';
-  if(pair==='Jay+Nya') return 'stanno insieme';
+  if(pair==='Jay+Nya') return b==='Nya' ? 'è la sua ragazza' : 'è il suo ragazzo';
   if(v>=1) return 'sono grandi amici';
   return 'ha qualche attrito';
 }
