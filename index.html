@@ -1817,8 +1817,7 @@ html.replaying.land #game-screen .human-zones{ flex:0 1 auto; }
 html.land .opp-head .opp-mood{ width:14px; height:14px; } html.land .opp-head .opp-mood .mface{ width:13px; height:13px; }
 html.land .opp-head .opp-nm{ max-width:100%; }
 .opp-nm .opp-mood{ margin-left:0; }
-.opp-nm .opp-name{ line-height:1.2; } .opp-nm .opp-mood{ align-self:center; margin-top:0; font-size:0; line-height:0; transform:translateY(-1.2px); }
-html.land .opp-nm .opp-mood{ transform:translateY(-0.4px); }
+.opp-nm .opp-name{ line-height:1.2; } .opp-nm .opp-mood{ align-self:center; margin-top:0;  }
 
 </style>
 </head>
@@ -2080,7 +2079,7 @@ html.land .opp-nm .opp-mood{ transform:translateY(-0.4px); }
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
   version: '1.6.3',   // mostrata in fondo alla home
-  buildTime: '2026-11-07T19:34',   // data e ora di creazione di questo file (per le novità)
+  buildTime: '2026-11-07T19:45',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -6594,15 +6593,37 @@ function moodIconHtml(p){
   if(Client.replay || p.kind!=='bot' || !BOT_PERSONAS[p.name] || !Store.opt('moodIcons')) return '';
   return `<button class="opp-mood" data-omood="${p.id}" type="button" aria-label="Stato d’animo di ${esc(p.name)}">${moodFace(p.mood||0)}</button>`;
 }
-/* the face stays only if it fits beside the name (never under it, never squeezing the name) */
+/* the face stays only if it fits beside the name (never under it, never squeezing the name),
+   and it is centred on the capital letters of the name using the real metrics of the font */
+let _mCtx = null;
+function capCenterShift(name, ic){
+  try{
+    if(!_mCtx) _mCtx = document.createElement('canvas').getContext('2d');
+    const cs = getComputedStyle(name), fs = parseFloat(cs.fontSize) || 12, K = 400;      // measured big, then scaled: small sizes come back rounded
+    _mCtx.font = `${cs.fontStyle} ${cs.fontWeight} ${K}px ${cs.fontFamily}`;
+    const m = _mCtx.measureText('H');
+    if(!(m.actualBoundingBoxAscent>0)) return null;
+    const cap = m.actualBoundingBoxAscent*fs/K;
+    // where the baseline really is on the screen: a zero-size box sitting on it
+    const probe = document.createElement('span');
+    probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline;';
+    name.appendChild(probe);
+    const baseline = probe.getBoundingClientRect().bottom;
+    probe.remove();
+    const r = ic.getBoundingClientRect();                                               // (no transform applied yet)
+    return (baseline - cap/2) - (r.top + r.height/2);
+  }catch(e){ return null; }
+}
 function fitMoodIcons(){
   document.querySelectorAll('#opponent-seats .opp-nm').forEach(nm=>{
     const ic = nm.querySelector('.opp-mood'); if(!ic) return;
     const name = nm.querySelector('.opp-name'), head = nm.parentElement;
-    ic.style.display = '';
+    ic.style.display = ''; ic.style.transform = 'none';
     const need = name.scrollWidth + ic.offsetWidth + 4;
     const wrapped = ic.offsetTop - name.offsetTop > 4;
-    if(wrapped || name.scrollWidth > name.clientWidth + 1 || (document.documentElement.classList.contains('land') && need > head.clientWidth)) ic.style.display = 'none';
+    if(wrapped || name.scrollWidth > name.clientWidth + 1 || (document.documentElement.classList.contains('land') && need > head.clientWidth)){ ic.style.display = 'none'; return; }
+    const dy = capCenterShift(name, ic);
+    ic.style.transform = dy===null ? '' : `translateY(${dy.toFixed(2)}px)`;
   });
 }
 function renderOpponents(){
@@ -7357,6 +7378,7 @@ document.getElementById('opponent-seats').addEventListener('click', e=>{
 /* the layout changes with the screen: check again whether the mood faces still fit beside the names */
 window.addEventListener('resize', ()=>{ try{ fitMoodIcons(); }catch(e){} });
 window.addEventListener('orientationchange', ()=>setTimeout(()=>{ try{ fitMoodIcons(); }catch(e){} }, 300));
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ try{ fitMoodIcons(); }catch(e){} });
 
 /* ============================================================
    REPLAYS
