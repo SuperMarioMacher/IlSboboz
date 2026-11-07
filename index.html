@@ -2079,7 +2079,7 @@ html.land .opp-head .opp-nm{ max-width:100%; }
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
   version: '1.6.3',   // mostrata in fondo alla home
-  buildTime: '2026-11-07T19:45',   // data e ora di creazione di questo file (per le novità)
+  buildTime: '2026-11-07T20:18',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -3416,7 +3416,7 @@ const BOT_NEUTRAL = { key:'', title:'', desc:'', mem:0.75, blunder:0.06, stale:'
 
 const Bots = (function(){
   /* tunable numbers (they were found by playing thousands of simulated games) */
-  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opC:0.5, opN:0.30, opS:0.10, opTh:0.3, opBias:0.16, opMax:0.6, opMu:0.45, botW:0.2, kaiBl:0.30, kaiMem:0.65, opO:0.012, opP:0.0133, nyaMean:3.0, samples:0, top:4, zthr:1.0};
+  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opC:0.35, opN:0.30, opS:0.10, opTh:0.3, opBias:0.16, opMax:0.7, opStreak:0.12, opMu:0.45, botW:0.2, kaiBl:0.30, kaiMem:0.65, opO:0.012, opP:0.0133, nyaMean:3.0, samples:0, top:4, zthr:1.0};
   const rv = r=>rankValue(r);
   const clamp = (x,a,b)=>Math.max(a, Math.min(b, x));
 
@@ -4011,18 +4011,21 @@ const Bots = (function(){
       const list = actor.hand.length>0 ? handCands(actor) : faceCands(actor);
       const mi = {a:actor.id, t:t.id, by:{}, modes:null, sbAvail:false, m:G.table.length, info:1};
       G.moveInfo = mi;
-      if(list.length<2 || G.table.length<3) return;
+      const plain = list.length>=2 && G.table.length>=3;               // which-card judgements need a real choice and something on the table
+      const has89 = list.some(k=>k.r==='8' || k.r==='9');               // the mode of an 8 / 9 is a choice even on a tiny table
+      if(!plain && !has89) return;
       const cj = {p:actor, per:{perfect:true, key:'', mem:1}, mind:buildMind(actor, {perfect:true, mem:1, key:''}, 0)};
       mi.info = infoOf(t, cj);
       list.forEach(k=>{
-        if(after(actor, k).sb){ mi.sbAvail = true; (mi.by[k.r] = mi.by[k.r] || []).push(0); return; }
         if(k.r==='8' || k.r==='9'){
           const type = k.r, A = k.r==='8' ? 'higher' : 'effect', B = k.r==='8' ? 'lower' : 'noeffect';
           const pa = noAnswer(cj, t, predOf(fakeState(k.r, {type, mode:A}), t)).p, pb = noAnswer(cj, t, predOf(fakeState(k.r, {type, mode:B}), t)).p;
           mi.modes = mi.modes || {}; mi.modes[k.r] = {[A]:pa, [B]:pb};
-          (mi.by[k.r] = mi.by[k.r] || []).push((pa+pb)/2);
+          if(plain) (mi.by[k.r] = mi.by[k.r] || []).push((pa+pb)/2);
           return;
         }
+        if(!plain) return;
+        if(after(actor, k).sb){ mi.sbAvail = true; (mi.by[k.r] = mi.by[k.r] || []).push(0); return; }
         (mi.by[k.r] = mi.by[k.r] || []).push(noAnswer(cj, t, predOf(fakeState(k.r, null), t)).p);
       });
       // a Jolly can always be played as a 2: the kindest card there is
@@ -4037,7 +4040,7 @@ const Bots = (function(){
       const t = G.players[mi.t];
       if(t.finished || typeof R==='undefined' || !R || !R.botOpin) return;
       const didSb = G.table.length===0, stuck = stuckAfter(t), top = didSb ? null : topOfTable(G);
-      const g = sizeG(Math.max(mi.m, G.table.length));
+      const g = sizeG(Math.max(mi.m, G.table.length, 3));
       let d = 0, tMode = 0, tCard = 0, tSb = 0;
       // 1) the choice of the 8 / 9 mode
       if(top && mi.modes && mi.modes[top.rank] && G.constraint){
@@ -4047,6 +4050,9 @@ const Bots = (function(){
           if(Math.abs(diff)>=0.15){
             let e = -P.opC*diff*mi.info*g;
             e *= (e<0) === stuck ? 1 : 0.6;                       // it did (not) end up hurting me as planned
+            // doing it again and again counts more and more (a streak of deliberate harm is sabotage)
+            const sk = G.opStreak || (G.opStreak = {}), kk2 = keyOf(t)+'<'+keyOf(actor);
+            if(e<0){ e *= 1 + P.opStreak*Math.min(sk[kk2]||0, 4); sk[kk2] = (sk[kk2]||0)+1; } else sk[kk2] = 0;
             d += e; tMode = e;
           }
         }
