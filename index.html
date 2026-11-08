@@ -1819,6 +1819,36 @@ html.land .opp-head .opp-nm{ max-width:100%; }
 .opp-nm .opp-mood{ margin-left:0; }
 .opp-nm .opp-name{ line-height:1.2; } .opp-nm .opp-mood{ align-self:center; margin-top:0;  }
 
+/* ===== computer: setup, 5/J dialogs and lobby grow with the screen (phone sizes untouched) ===== */
+@media (min-width:900px) and (min-height:500px){
+  #setup-screen{ --sw:clamp(72px, min(8.6vw, 17vh), 170px); gap:calc(var(--sw) * .16); }
+  #setup-pick, #setup-wait{ max-width:calc(var(--sw) * 8); gap:calc(var(--sw) * .16); }
+  #setup-screen h2{ font-size:clamp(1.5rem, 3.2vh, 2.6rem); }
+  #setup-screen p{ font-size:clamp(.95rem, 1.9vh, 1.35rem); max-width:calc(var(--sw) * 7); }
+  #setup-hand{ --card-w:var(--sw); gap:calc(var(--sw) * .13); }
+  #setup-hand .card.selected{ transform:translateY(calc(var(--sw) * -.1)); }
+  #btn-confirm-setup{ font-size:clamp(1rem, 1.9vh, 1.35rem); padding:calc(var(--sw) * .17) calc(var(--sw) * .6); }
+  .wait-row{ font-size:clamp(.95rem, 1.9vh, 1.3rem); }
+
+  .modal-card-row{ --mw:clamp(84px, min(7.6vw, 15vh), 150px); --card-w:var(--mw); --card-h:calc(var(--mw) * 1.41); --cw:var(--mw); gap:calc(var(--mw) * .13); margin-top:calc(var(--mw) * .2); }
+  .modal-card-row .card{ font-size:calc(var(--cw) * .19); padding:calc(var(--cw) * .08) calc(var(--cw) * .095); border-radius:calc(var(--cw) * .135); }
+  .modal-card-row .card .corner{ font-size:calc(var(--cw) * .17); }
+  .modal-card-row .card .suit-mid{ font-size:calc(var(--cw) * .44); }
+  .modal-box.modal-box-wide{ max-width:min(92vw, 1100px); padding:calc(18px + .8vh) calc(24px + 1vw); }
+  .modal-box-wide h3{ font-size:clamp(1.45rem, 2.7vh, 2.1rem); }
+  .modal-box-wide p{ font-size:clamp(1rem, 1.9vh, 1.35rem); }
+
+  .s-ava{ --as:clamp(38px, 5vh, 48px); width:var(--as); height:var(--as); }
+  .s-ava{ font-size:clamp(1.25rem, 3vh, 1.55rem); }
+  .s-ava.bot{ font-size:clamp(1.1rem, 2.6vh, 1.35rem); }
+  .seat-row{ padding:clamp(5px,.9vh,9px) 14px; gap:14px; min-height:clamp(50px, 7.2vh, 62px); border-radius:15px; }
+  .s-name{ font-size:1.12rem; }
+  .pa{ width:42px; height:42px; font-size:1.45rem; } .pa.sm{ width:34px; height:34px; font-size:1.2rem; }
+  .pb-ava{ width:30px; height:30px; font-size:1.1rem; }
+  .s-mood{ width:28px; height:28px; } .s-mood .mface{ width:26px; height:26px; }
+  .opp-nm .opp-mood{ width:1.35em; height:1.35em; } .opp-nm .opp-mood .mface{ width:1.25em; height:1.25em; }
+}
+
 </style>
 </head>
 <body>
@@ -2079,7 +2109,7 @@ html.land .opp-head .opp-nm{ max-width:100%; }
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
   version: '1.6.3',   // mostrata in fondo alla home
-  buildTime: '2026-11-07T20:18',   // data e ora di creazione di questo file (per le novità)
+  buildTime: '2026-11-08T08:07',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
   // Lasciato vuoto = nessun dato inviato.
@@ -7142,7 +7172,7 @@ const Modal = {
   discard(hand, onPick){
     const box = Modal.open(`<h3>Hai giocato un 5</h3><p>Scarta una carta dalla mano nell’ipersboboz (esce definitivamente dal gioco).</p><div class="modal-card-row" id="discard-row">${hand.map(c=>cardHtml(c)).join('')}</div>`, 'modal-box-wide');
     const row = document.getElementById('discard-row');
-    { const n = hand.length, w = n<=8 ? 60 : 52; row.style.setProperty('--card-w', w+'px'); row.style.setProperty('--cw', w+'px'); row.style.setProperty('--card-h', (w*1.41).toFixed(1)+'px'); fitCardRow(row); }
+    if(!matchMedia('(min-width:900px) and (min-height:500px)').matches){ const n = hand.length, w = n<=8 ? 60 : 52; row.style.setProperty('--card-w', w+'px'); row.style.setProperty('--cw', w+'px'); row.style.setProperty('--card-h', (w*1.41).toFixed(1)+'px'); fitCardRow(row); } else fitCardRow(row);
     Array.from(row.children).forEach((el,i)=>{
       el.style.cursor = 'pointer';
       el.onclick = ()=>{
@@ -7168,7 +7198,7 @@ const Modal = {
    never disappears or shows what lies underneath. */
 /* many cards: the row scrolls instead of shrinking the cards; with few cards nothing clips the flight */
 function fitCardRow(row){
-  row.style.maxHeight = 'min(48vh, 360px)'; row.style.overflowY = 'auto'; row.style.overflowX = 'hidden';
+  row.style.maxHeight = matchMedia('(min-width:900px) and (min-height:500px)').matches ? '62vh' : 'min(48vh, 360px)'; row.style.overflowY = 'auto'; row.style.overflowX = 'hidden';
   if(row.scrollHeight <= row.clientHeight + 1){ row.style.maxHeight = ''; row.style.overflow = ''; }
 }
 function modalFlyOut(box, row, el, toRect, onDone){
