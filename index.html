@@ -2118,7 +2118,7 @@ html.land .opp-head .opp-nm{ max-width:100%; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.6.4',   // mostrata in fondo alla home
+  version: '1.6.5',   // mostrata in fondo alla home
   buildTime: '2026-11-08T12:50',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
@@ -3421,19 +3421,19 @@ const BOT_PERSONAS = {
   Zane:{ key:'Zane', sens:{pos:0.75, neg:0.75}, title:'Il calcolatore',
     desc:'Il maestro del calcolo: ricorda ogni singola carta uscita e sceglie sempre la mossa più precisa. Non regala niente a nessuno e punta chi è in vantaggio. Se la partita si blocca, pur di non perdere accetta anche il pareggio.',
     mem:1, perfect:true, calc:true, blunder:0, stale:'seek', rel:{Jay:1, Cole:1} },
-  Cole:{ key:'Cole', sens:{pos:1.2, neg:0.9}, title:'Il generoso',
+  Cole:{ key:'Cole', sens:{pos:1.3, neg:0.8}, title:'Il generoso',
     desc:'Un bravo ragazzo e un giocatore di squadra: se qualcuno è in difficoltà gli dà una mano invece di affondarlo. Ricorda bene quasi tutte le carte, ma ogni tanto si distrae. Se la partita rischia di bloccarsi fa il possibile per sbloccarla.',
     mem:0.7, blunder:0.05, stale:'avoid', rel:{Jay:1, Zane:1} },
-  Jay:{ key:'Jay', sens:{pos:1.2, neg:0.9}, title:'Il simpaticone',
+  Jay:{ key:'Jay', sens:{pos:1.3, neg:0.8}, title:'Il simpaticone',
     desc:'Il burlone del gruppo, gli piace fare spettacolo: riporta in tavola le carte dello sboboz con i 3, col J pesca carte che non ti aspetti e ogni tanto si inventa una mossa strana. Ma se sta perdendo davvero smette di scherzare. Se il gioco si blocca cerca di sbloccarlo.',
     mem:0.55, blunder:0.07, stale:'avoid', rel:{Nya:2, Cole:1, Kai:-1} },
   Lloyd:{ key:'Lloyd', sens:{pos:1, neg:1}, title:'L’equilibrato',
     desc:'Il più equilibrato: gioca pulito e senza colpi di scena. Ricorda buona parte delle carte uscite, anche se qualcuna gli sfugge, e non fa né favori né dispetti. Se la partita rischia di bloccarsi preferisce sbloccarla.',
     mem:0.75, blunder:0.06, stale:'avoid', rel:{} },
-  Nya:{ key:'Nya', sens:{pos:0.9, neg:1.2}, title:'La competitiva',
+  Nya:{ key:'Nya', sens:{pos:0.8, neg:1.45}, title:'La competitiva',
     desc:'Vive per vincere. Quando è in testa non fa sconti a nessuno e ti schiaccia senza pietà; quando è in difficoltà si ammorbidisce con chi è messo male come lei. Se la partita si blocca accetta volentieri il pareggio pur di non perdere.',
     mem:0.8, blunder:0.04, stale:'seek', rel:{Jay:2, Kai:1} },
-  Kai:{ key:'Kai', sens:{pos:0.9, neg:1.2}, title:'Il focoso',
+  Kai:{ key:'Kai', sens:{pos:0.8, neg:1.45}, title:'Il focoso',
     desc:'Fortissimo finché le cose vanno bene, ma odia perdere. Quando resta indietro si innervosisce: sbaglia di più, dimentica le carte che prima ricordava e diventa più cattivo. Se la partita si blocca accetta il pareggio pur di non perdere.',
     mem:0.9, blunder:0.03, stale:'seek', rel:{Nya:1, Lloyd:1, Jay:-1} }
 };
@@ -3456,7 +3456,7 @@ const BOT_NEUTRAL = { key:'', title:'', desc:'', mem:0.75, blunder:0.06, stale:'
 
 const Bots = (function(){
   /* tunable numbers (they were found by playing thousands of simulated games) */
-  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opC:0.35, opN:0.30, opS:0.10, opTh:0.3, opBias:0.16, opMax:0.7, opStreak:0.12, opMu:0.45, botW:0.2, kaiBl:0.30, kaiMem:0.65, opO:0.012, opP:0.0133, nyaMean:3.0, samples:0, top:4, zthr:1.0};
+  const P = {mu0:0.3, cmax:2.0, cexp:1.6, c2:2.2, cj:2.6, ck:1.5, shedEarly:0.25, shedLate:1.0, noise:0.12, chainDamp:0.3, maxGroup:0, dev:1.5, devRank:0.12, devCost:1.0, xs:0, zs:1.2, zoff:0.1, sbBonus:2.0, jSpice:0.10, j3:1.0, jJ:1, jJp:0.2, jMu:0.35, opC:0.35, opN:0.30, opS:0.10, opTh:0.3, opBias:0.16, opMax:0.7, opStreak:0.12, opFlow:0.17, opMu:0.45, botW:0.2, kaiBl:0.30, kaiMem:0.65, opO:0.012, opP:0.0133, nyaMean:3.0, samples:0, top:4, zthr:1.0};
   const rv = r=>rankValue(r);
   const clamp = (x,a,b)=>Math.max(a, Math.min(b, x));
 
@@ -4115,21 +4115,25 @@ const Bots = (function(){
           }
         }
         // a sboboz was possible (nobody picks the whole pile) and the pile was left to me
-        if(mi.sbAvail && !didSb && stuck && G.table.length>=4){ d -= P.opS*g; tSb = -P.opS*g; }
+        if(mi.sbAvail && !didSb && stuck && G.table.length>=4){ d -= P.opS*g*mi.info; tSb = -P.opS*g*mi.info; }
       }
       const dInt = d;
       d = clamp(d, -P.opMax, P.opMax);
       // 3) the plain flow of the game
       const dAcc = stuck ? -accidental(G.table.length) : (mi.m>=2 ? P.opP : 0);
-      d += dAcc;
       if(P.trace) P.trace.push({mode:tMode, card:tCard, sb:tSb, int:dInt, acc:dAcc, who:actor.kind, to:t.name});
-      if(!d) return;
+      if(!d && !dAcc) return;
       const sn = (BOT_PERSONAS[t.name] || {}).sens || {pos:1, neg:1};
-      d *= d>0 ? sn.pos : sn.neg;
-      if(actor.kind==='bot') d *= P.botW;
+      const bw = actor.kind==='bot' ? P.botW : 1;
+      const dd = d * (d>0 ? sn.pos : sn.neg) * bw, da = dAcc * (dAcc>0 ? sn.pos : sn.neg) * bw;
       const o = R.botOpin[keyOf(t)] || (R.botOpin[keyOf(t)] = {});
       const kk = keyOf(actor);
-      o[kk] = clamp((o[kk]||0) + d, -2, 2);
+      let v = clamp((o[kk]||0) + dd, -2, 2);
+      /* the plain flow (picking up the table by chance, a move after which one can answer) can never change the face by itself:
+         it only goes as far as a small margin, which depends on how touchy the character is; what is done on purpose goes on */
+      if(da<0) v = Math.max(v + da, Math.min(v, -P.opFlow*sn.neg));
+      else if(da>0) v = Math.min(v + da, Math.max(v, P.opFlow*sn.pos));
+      o[kk] = clamp(v, -2, 2);
     }catch(e){}
   }
   function newGame(){
@@ -6233,6 +6237,15 @@ if(window.ResizeObserver){ window.addEventListener('load', ()=>{ const tv = docu
 let animating = false;
 
 function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+/* a Jolly card (flying clone or bot's covered/uncovered card) becomes the card it stands for, with a small pulse */
+function jollyBecomes(el, card){
+  if(!el || !card) return;
+  const small = el.classList.contains('small'), keep = el.classList.contains('stack-top') ? ' stack-top' : '';
+  const w = document.createElement('div'); w.innerHTML = cardHtml(card, small ? 'small' : undefined);
+  const n = w.firstElementChild; if(!n) return;
+  el.className = n.className + keep; el.innerHTML = n.innerHTML; el.setAttribute('data-uid', card.uid);
+  try{ el.animate([{filter:'brightness(2.1)', scale:'1.14'},{filter:'brightness(1)', scale:'1'}], {duration:380, easing:'ease-out'}); }catch(e){}
+}
 let playEpoch = 0;   // epoch of the event being animated: a flight that starts after the game was left is dropped
 /* when does a card flying to the table start to cover the effect icon in the middle of it? (ms after take-off, same curve as flyClone) */
 function overlapDelay(from, to){
@@ -6458,8 +6471,9 @@ async function playEvent(ev){
           if(from.left<hr.left || from.left+from.width>hr.right){ from = {left:Math.max(hr.left, Math.min(hr.right-from.width, from.left)), top:from.top, width:from.width, height:from.height}; }
         }
         if(i===0) dropEffectIcons(overlapDelay(from, toRect));
-        if(src) src.style.visibility = 'hidden';
-        return wait(i*70).then(()=>fly(cardHtml(c), from, toRect, {growTo:true, hold:true}));
+        const jl = (!mine && ev.zone==='faceup' && c.wasJolly && src && src.classList.contains('jolly'));
+        if(jl) jollyBecomes(src, c); else if(src) src.style.visibility = 'hidden';
+        return (jl ? wait(440*ANIM_SCALE) : Promise.resolve()).then(()=>{ if(src) src.style.visibility = 'hidden'; return wait(i*70); }).then(()=>fly(cardHtml(c), from, toRect, {growTo:true, hold:true}));
       });
       await Promise.all(flights);
       Fx._noPin = false;
@@ -6475,6 +6489,11 @@ async function playEvent(ev){
       break;
     }
     case 'sboboz': {
+      { /* a Jolly that completes the sboboz first turns into its value, then the sboboz starts */
+        const jc = (ev.cards||[]).find(c=>c.wasJolly);
+        const jf = jc && heldClones.find(e=>e && e.classList && e.classList.contains('jolly'));
+        if(jf){ jollyBecomes(jf, jc); await wait(480*ANIM_SCALE); }
+      }
       Fx.flash('💥 Sboboz!', {tip:Fx.sbobozTip(ev)});            // the icon shows before the cards start moving
       /* 1) the old sboboz turns face-down and goes to the ipersboboz,
          2) then the table cards (still face-up) go to the sboboz */
@@ -6572,6 +6591,7 @@ function render(){
   centerBands();
   clearFabs(); placeDecal();
   try{ refreshMoodModal(); }catch(e){}
+  try{ iconize(document.getElementById('game-screen')); }catch(e){}     // emoji become icons right now, not a frame later
 }
 
 function renderPiles(){
@@ -6699,7 +6719,7 @@ function renderOpponents(){
       seat.innerHTML = `
         <div class="opp-head">
           <span class="opp-nm"><span class="opp-name${(p.kind==='bot' && BOT_PERSONAS[p.name] && !Client.replay) ? ' tap-bot' : ''}" ${(p.kind==='bot' && BOT_PERSONAS[p.name] && !Client.replay) ? `data-omood="${p.id}"` : ''}>${displayName(p)}${nameTag(p)}</span>${moodIconHtml(p)}</span>
-          <span class="opp-counts"><span class="opp-finished-badge">🏁 ${p.place}° posto</span></span>
+          <span class="opp-counts"><span class="opp-finished-badge"><span class="ico ico-flag" role="img">${icon('flag')}</span> ${p.place}° posto</span></span>
           ${elemHtml}
         </div>
         <div class="opp-stacks-row">${'<div class="stack-slot small"></div>'.repeat(5)}</div>`;
@@ -8623,6 +8643,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.6.5', d:'2026-11-10'},
   {v:'1.6.4', d:'2026-11-08'},
   {v:'1.6.3', d:'2026-11-07'},
   {v:'1.6.2', d:'2026-11-07'},
