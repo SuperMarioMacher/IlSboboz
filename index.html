@@ -2118,7 +2118,7 @@ html.land .opp-head .opp-nm{ max-width:100%; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.6.5',   // mostrata in fondo alla home
+  version: '1.6.6',   // mostrata in fondo alla home
   buildTime: '2026-11-08T12:50',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
@@ -3906,9 +3906,13 @@ const Bots = (function(){
     const sc = list.map(k=>({k, s:scoreFn(k) + (Math.random()-0.5)*2*P.noise}));
     sc.sort((a,b)=>b.s-a.s);
     let pick = sc[0];
-    if(sc.length>1 && Math.random() < c.blunder){
-      // a human slip: one of the next best moves (never one that is much worse)
-      const alt = sc.slice(1, 4).filter(x=>x.s > sc[0].s - 1.6);
+    /* near the end of the game everybody concentrates: slips become much rarer */
+    const left = c.p.hand.length + c.p.slots.reduce((a,s)=>a+(s.up?1:0)+(s.down?1:0), 0);
+    const calm = left<=6 ? 0.3 : 1;
+    if(sc.length>1 && Math.random() < c.blunder*calm){
+      // a human slip: one of the next best moves (never one that is much worse); keeping back one card of a group is not a slip
+      const top = sc[0].k;
+      const alt = sc.slice(1, 4).filter(x=>x.s > sc[0].s - 1.6 && !(x.k.zone===top.zone && x.k.r===top.r && x.k.n<top.n));
       if(alt.length){ pick = alt[Math.floor(Math.random()*alt.length)]; count(c.p,'blunder'); }
     }
     return pick;
@@ -8643,7 +8647,8 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
-  {v:'1.6.5', d:'2026-11-10'},
+  {v:'1.6.6', d:'2026-11-10'},
+  {v:'1.6.5', d:'2026-11-09'},
   {v:'1.6.4', d:'2026-11-08'},
   {v:'1.6.3', d:'2026-11-07'},
   {v:'1.6.2', d:'2026-11-07'},
