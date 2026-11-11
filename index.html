@@ -1617,6 +1617,8 @@ html.land #results-box{ max-height:calc(var(--app-height) - max(var(--safe-top),
 .ss-row .ss-t{ flex:1 1 auto; min-width:0; }
 .ss-row.main{ margin-top:6px; padding-top:4px; border-top:1px solid rgba(255,255,255,.08); font-weight:700; }
 .ss-row.sub{ font-size:.8rem; }
+#st-moodsub{ margin-left:6px; padding-left:8px; border-left:2px solid rgba(232,192,95,.25); }
+.sw.ro{ opacity:.45; } .sw.ro input{ cursor:not-allowed; }
 .ss-i{ flex:0 0 auto; width:30px; height:30px; margin:0 -2px; padding:0; border:0; background:transparent; color:rgba(232,192,95,.8); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; border-radius:50%; }
 .ss-i svg{ width:19px; height:19px; }
 .ss-i.on{ color:#1a1204; background:var(--gold-bright); }
@@ -2097,8 +2099,10 @@ html.land .opp-head .opp-nm{ max-width:100%; }
       <div class="ss-row sub"><span class="ss-t">Tasto «Seleziona tutte»</span><button type="button" class="ss-i" data-i="aidAll" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aidAll"><i></i></label></div><div class="ss-note" data-n="aidAll"></div>
       <div class="ss-row sub"><span class="ss-t">Evita errori</span><button type="button" class="ss-i" data-i="aidSafe" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-aidSafe"><i></i></label></div><div class="ss-note" data-n="aidSafe"></div>
     </div>
-    <div class="ss-row"><span class="ss-t">Icone umore dei bot</span><button type="button" class="ss-i" data-i="moodIcons" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-moodIcons"><i></i></label></div>
-    <div class="ss-note" data-n="moodIcons"></div>
+    <div class="ss-row main"><span class="ss-t">Umore dei bot</span><button type="button" class="ss-i" data-i="mood" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw" id="sw-mood"><input type="checkbox" id="st-mood"><i></i></label></div>
+    <div class="ss-note" data-n="mood"></div>
+    <div id="st-moodsub"><div class="ss-row sub"><span class="ss-t">Icone dell’umore</span><button type="button" class="ss-i" data-i="moodIcons" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button><label class="sw"><input type="checkbox" id="st-moodIcons"><i></i></label></div>
+    <div class="ss-note" data-n="moodIcons"></div></div>
     <div class="ss-row"><span class="ss-t">Ritardo dei bot</span><b id="st-delay-v">nessuno</b><button type="button" class="ss-i" data-i="delay" aria-label="Informazioni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></div>
     <div class="ss-note" data-n="delay"></div>
     <input type="range" id="st-delay" min="0" max="5" step="0.5" value="0">
@@ -2118,7 +2122,7 @@ html.land .opp-head .opp-nm{ max-width:100%; }
    Puoi cambiare queste liste a piacere (anche senza ricompilare nulla).
    Modificare questo blocco NON impedisce ai giocatori di entrare nella stessa stanza. */
 window.SBOBOZ_CONFIG = {
-  version: '1.6.6',   // mostrata in fondo alla home
+  version: '1.6.7',   // mostrata in fondo alla home
   buildTime: '2026-11-08T12:50',   // data e ora di creazione di questo file (per le novità)
   // statistiche d'uso anonime con Umami (senza cookie). Per attivarle:
   // crea un sito su https://cloud.umami.is e incolla qui sotto il suo "Website ID".
@@ -3549,8 +3553,10 @@ const Bots = (function(){
   /* ---------- opinions inside a lobby ---------- */
   /* a ninja is always the same ninja (even if it leaves the lobby and comes back); people are told apart by their seat id */
   const keyOf = q=> (q.kind==='bot' || q.mid===undefined || q.mid===null) ? 'n'+q.name : 'm'+q.mid;
+  /* the moods can be switched off for a whole room (in the lobby): the bots then neither learn grudges nor play differently */
+  const moodOff = ()=>{ try{ return !!(R && R.settings && R.settings.mood===false); }catch(e){ return false; } };
   function opinion(c, q){
-    if(c.per.solo) return 0;
+    if(c.per.solo || moodOff()) return 0;
     try{ if(typeof R==='undefined' || !R || !R.botOpin) return 0; }catch(e){ return 0; }
     const o = R.botOpin[keyOf(c.p)]; return o ? (o[keyOf(q)]||0) : 0;
   }
@@ -4049,7 +4055,7 @@ const Bots = (function(){
   function preMove(actor){
     G.moveInfo = null;
     try{
-      if(typeof R==='undefined' || !R || !R.botOpin) return;
+      if(typeof R==='undefined' || !R || !R.botOpin || moodOff()) return;
       const t = nextActive(actor);
       if(t===actor || t.kind!=='bot') return;
       const list = actor.hand.length>0 ? handCands(actor) : faceCands(actor);
@@ -4079,7 +4085,7 @@ const Bots = (function(){
   }
   function postMove(actor){
     const mi = G.moveInfo; G.moveInfo = null;
-    if(!mi || mi.a!==actor.id) return;
+    if(!mi || mi.a!==actor.id || moodOff()) return;
     try{
       const t = G.players[mi.t];
       if(t.finished || typeof R==='undefined' || !R || !R.botOpin) return;
@@ -4152,7 +4158,7 @@ const Bots = (function(){
   /* how a bot feels about a person at the table: the opinion built from how kind that person has been to it */
   function moodOf(bot, target){
     try{
-      if(!bot || !target || bot.kind!=='bot' || typeof R==='undefined' || !R || !R.botOpin) return 0;
+      if(!bot || !target || bot.kind!=='bot' || typeof R==='undefined' || !R || !R.botOpin || moodOff()) return 0;
       const o = R.botOpin[keyOf(bot)]; const v = o ? (o[keyOf(target)]||0) : 0;
       return Math.round(v*100)/100;
     }catch(e){ return 0; }
@@ -4175,13 +4181,13 @@ const ST_KEYS = ['played','pickups','taken','sboboz','sbobozCards','sbobozKings'
 
 /* personal settings (the bot delay is only the default for rooms this player hosts) */
 function defaultSettings(){
-  return {hand:'dyn', aid:true, aidDim:true, aidSb:false, aidAll:true, aidSafe:false, moodIcons:false, botDelay:0, autoBot:''};
+  return {hand:'dyn', aid:true, aidDim:true, aidSb:false, aidAll:true, aidSafe:false, moodIcons:false, mood:true, botDelay:0, autoBot:''};
 }
 function cleanSettings(d){
   const o = defaultSettings();
   if(!d || typeof d!=='object') return o;
   if(['dyn','right','left'].includes(d.hand)) o.hand = d.hand;
-  ['aid','aidDim','aidSb','aidAll','aidSafe','moodIcons'].forEach(k=>{ if(typeof d[k]==='boolean') o[k] = d[k]; });
+  ['aid','aidDim','aidSb','aidAll','aidSafe','moodIcons','mood'].forEach(k=>{ if(typeof d[k]==='boolean') o[k] = d[k]; });
   if(typeof d.autoBot==='string' && (d.autoBot==='' || (typeof BOT_PERSONAS!=='undefined' && BOT_PERSONAS[d.autoBot]))) o.autoBot = d.autoBot;
   if(typeof d.botDelay==='number' && isFinite(d.botDelay)) o.botDelay = Math.max(0, Math.min(5, Math.round(d.botDelay*2)/2));
   return o;
@@ -4558,7 +4564,7 @@ function tabToken(){
 
 const R = {
   role:'none',          // 'none' | 'host' | 'guest'
-  code:'', members:[], settings:{twoDecks:false, party:false, partyGames:null, botDelay:0}, party:null,
+  code:'', members:[], settings:{twoDecks:false, party:false, partyGames:null, botDelay:0, mood:true}, party:null,
   phase:'lobby',        // 'lobby' | 'game' | 'results'
   net:'off',            // 'off' | 'connecting' | 'ready' | 'error'
   netErr:'', online:false,
@@ -4614,7 +4620,7 @@ const Room = {
   /* ---------- create / destroy ---------- */
   create(online){
     Room.destroy();
-    R.role = 'host'; R.phase = 'lobby'; R.botOpin = {}; R.members = []; R.settings = {twoDecks:false, party:false, partyGames:null, botDelay:Store.opt('botDelay')}; R.party = null;
+    R.role = 'host'; R.phase = 'lobby'; R.botOpin = {}; R.members = []; R.settings = {twoDecks:false, party:false, partyGames:null, botDelay:Store.opt('botDelay'), mood:Store.opt('mood')!==false}; R.party = null;
     R.code = genCode(); R.online = !!online; R.net = 'off'; R.netErr = '';
     const prof = Store.data;
     const me = newMember('human', prof.name || 'Giocatore', prof.avatar, {isHost:true, token:tabToken()});
@@ -4929,6 +4935,8 @@ const Room = {
     Room.lobbyChanged();
   },
   /* the only setting the host decides for everybody: how long bots wait before playing (seconds, 0-5) */
+  /* the bots' moods on / off: only the host, only in the lobby (nothing changes during a game) */
+  setMood(v){ if(R.role!=='host' || R.phase!=='lobby') return; v = !!v; Store.setOpt('mood', v); R.settings.mood = v; Room.lobbyChanged(); },
   setBotDelay(v){ v = Math.max(0, Math.min(5, Math.round((+v||0)*2)/2)); Store.setOpt('botDelay', v); if(R.role==='host'){ R.settings.botDelay = v; if(R.phase==='lobby') Room.lobbyChanged(); else broadcastGuests({t:'bd', v}); } },
   setTwoDecks(v){ R.settings.twoDecks = !!v; Room.lobbyChanged(); },
   setParty(v){ R.settings.party = !!v && R.members.length>=PARTY_MIN_PLAYERS; R.party = null; Room.lobbyChanged(); },
@@ -6659,8 +6667,12 @@ function pingSpan(p){
   return `<span class="s-ping opp-ping${v==null?'':' '+UI.pingClass(v)}" data-ping="${key}">${v==null?'':v+' ms'}</span>`;
 }
 /* the face of a bot's mood towards me, next to its name (only when the player turned this graphic setting on) */
+/* are the moods on in this room? (the host decides in the lobby; guests read it from the lobby) */
+function moodUiOn(){
+  try{ if(R.role==='guest'){ const L = R.lobby; return !(L && L.settings && L.settings.mood===false); } return !(R.settings && R.settings.mood===false); }catch(e){ return true; }
+}
 function moodIconHtml(p){
-  if(Client.replay || p.kind!=='bot' || !BOT_PERSONAS[p.name] || !Store.opt('moodIcons')) return '';
+  if(Client.replay || p.kind!=='bot' || !BOT_PERSONAS[p.name] || !Store.opt('moodIcons') || !moodUiOn()) return '';
   return `<button class="opp-mood" data-omood="${p.id}" type="button" aria-label="Stato d’animo di ${esc(p.name)}">${moodFace(p.mood||0)}</button>`;
 }
 /* the face stays only if it fits beside the name (never under it, never squeezing the name),
@@ -8647,6 +8659,7 @@ function wireStats(){
    an update. Dates/times are when each file was produced.
 ============================================================ */
 const CHANGELOG = [
+  {v:'1.6.7', d:'2026-11-11'},
   {v:'1.6.6', d:'2026-11-10'},
   {v:'1.6.5', d:'2026-11-09'},
   {v:'1.6.4', d:'2026-11-08'},
@@ -9665,6 +9678,7 @@ const SET_INFO = {
   aidSb:'Le carte che completano uno sboboz (le carte uguali che ti servono) brillano.',
   aidAll:'Da tre carte uguali in su, selezionandone una compare il tasto per prendere subito tutte quelle utili (al massimo quante servono per lo sboboz).',
   aidSafe:'Chiede conferma se giochi meno carte uguali di quelle che hai o più di quelle che bastano per lo sboboz.',
+  mood:'Se è acceso, i bot ricordano come li tratti: un ninja a cui fai dispetti apposta si arrabbia e ti ostacola, uno a cui dai una mano diventa gentile con te, e ognuno reagisce a modo suo. Se è spento giocano sempre allo stesso modo con tutti, senza rancori né simpatie. Lo decide l’host e si può cambiare solo nella stanza, prima di iniziare la partita.',
   moodIcons:'Accanto al nome di ogni bot compare una faccina che mostra come si sente verso di te (felice, contento, neutro, arrabbiato, furioso). In orizzontale compare solo se c’è posto di fianco al nome. Puoi comunque toccare il nome di un bot per vederlo.',
   delay:'Un bot non gioca prima di questi secondi dall’inizio del suo turno, a ogni sua mossa. Lo decide l’host e può cambiarlo in qualsiasi momento, anche durante la partita.'
 };
@@ -9674,6 +9688,13 @@ function syncSettings(){
   $('st-aid').checked = !!Store.opt('aid');
   ['aidDim','aidSb','aidAll','aidSafe'].forEach(k=>{ $('st-'+k).checked = !!Store.opt(k); });
   $('st-moodIcons').checked = !!Store.opt('moodIcons');
+  { const gst = R.role==='guest', Lm = R.lobby;
+    const on = gst ? !(Lm && Lm.settings && Lm.settings.mood===false) : !(R.settings && R.settings.mood===false);
+    const canEdit = !gst && R.phase==='lobby';
+    $('st-mood').checked = on; $('st-mood').disabled = !canEdit; $('sw-mood').classList.toggle('ro', !canEdit);
+    const mn = document.querySelector('.ss-note[data-n="mood"]');
+    mn.dataset.t = SET_INFO.mood + (canEdit ? '' : (gst ? ' Qui lo vedi soltanto: decide l’host.' : ' Ora la partita è in corso: puoi cambiarlo solo tornando alla stanza.'));
+    if(mn.classList.contains('open')) mn.textContent = mn.dataset.t; }
   $('st-aids').classList.toggle('off', !Store.opt('aid'));
   const hostLike = R.role!=='guest', L = R.lobby;
   const d = hostLike ? Store.opt('botDelay') : ((L && L.settings && typeof L.settings.botDelay==='number') ? L.settings.botDelay : 0);
@@ -9717,6 +9738,7 @@ function relLabel(a, b, v){
 /* the "i" / the face next to a bot's name: how that ninja plays and how it feels about you (live) */
 function showBotInfo(name, getMood){
   const per = BOT_PERSONAS[name]; if(!per) return;
+  if(!moodUiOn()) getMood = null;
   const lab = {2:'va molto d’accordo con lui/lei', 1:'va d’accordo', '-1':'ha qualche attrito'};
   const rel = Object.keys(per.rel).sort((a,b)=>per.rel[b]-per.rel[a]).map(k=>`<li><b>${esc(k)}</b>: ${relLabel(name, k, per.rel[k])}</li>`).join('');
   Modal.open(`<h3 class="bi-h"><span class="s-ava bot" style="--c:${botColor(name)}">${esc(name[0])}</span><span>${esc(name)}</span><small class="bi-t">${esc(per.title)}</small></h3>
@@ -9752,6 +9774,7 @@ function initSettings(){
   document.querySelectorAll('#st-hand button').forEach(b=>{ b.onclick = ()=>{ Store.setOpt('hand', b.dataset.v); try{ syncLand(); scheduleFitSettled(); }catch(e){} syncSettings(); }; });
   $('st-aid').onchange = e=>{ Store.setOpt('aid', e.target.checked); syncSettings(); if(Client.V && UI.current==='game') render(); };
   ['aidDim','aidSb','aidAll','aidSafe'].forEach(k=>{ $('st-'+k).onchange = e=>{ Store.setOpt(k, e.target.checked); if(Client.V && UI.current==='game') render(); }; });
+  $('st-mood').onchange = e=>{ Room.setMood(e.target.checked); syncSettings(); if(Client.V && UI.current==='game') render(); };
   $('st-moodIcons').onchange = e=>{ Store.setOpt('moodIcons', e.target.checked); if(Client.V && UI.current==='game') render(); };
   $('st-delay').oninput = e=>{ const v = +e.target.value; $('st-delay-v').textContent = v===0 ? 'nessuno' : String(v).replace('.',',')+' s'; Room.setBotDelay(v); };
   syncSettings();
